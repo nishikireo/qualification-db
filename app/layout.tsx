@@ -1,9 +1,11 @@
 import type { Metadata } from "next"
 import "./globals.css"
 import StructuredData from "@/components/StructuredData"
+import Header from "@/components/Header"
+import Footer from "@/components/Footer"
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://example.com"
-const siteName = "資格DB"
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://openshikaku.jp"
+const siteName = "オープン資格"
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -36,10 +38,15 @@ export default function RootLayout({
 
   return (
     <html lang="ja">
-      <body>
+      <body className="min-h-screen bg-white text-neutral-950">
         <StructuredData data={organizationJsonLd} />
         <StructuredData data={websiteJsonLd} />
-        {children}
+
+        <div className="flex min-h-screen flex-col">
+          <Header />
+          <div className="flex-1">{children}</div>
+          <Footer />
+        </div>
       </body>
     </html>
   )

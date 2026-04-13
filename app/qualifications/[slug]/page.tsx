@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { notFound } from "next/navigation"
 import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd"
 import {
@@ -86,8 +87,22 @@ export default async function QualificationPage({ params }: Props) {
         ]}
       />
 
-      <nav className="mb-4 text-sm text-gray-500">
-        ホーム / 資格一覧 / {q.name_short}
+      <nav className="mb-6 text-sm text-neutral-500">
+        <ol className="flex flex-wrap items-center gap-2">
+          <li>
+            <Link href="/" className="hover:text-neutral-950">
+              ホーム
+            </Link>
+          </li>
+          <li>/</li>
+          <li>
+            <Link href="/lists/difficulty" className="hover:text-neutral-950">
+              資格一覧
+            </Link>
+          </li>
+          <li>/</li>
+          <li className="text-neutral-950">{q.name_short}</li>
+        </ol>
       </nav>
 
       <h1 className="text-3xl font-bold mb-4">

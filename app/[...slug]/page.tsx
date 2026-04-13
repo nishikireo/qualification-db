@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import ReactMarkdown from "react-markdown"
@@ -78,13 +79,25 @@ export default async function StaticPage({ params }: Props) {
     <main className="mx-auto max-w-4xl px-6 py-10">
       <BreadcrumbJsonLd items={breadcrumbItems} />
 
-      <nav className="mb-4 text-sm text-gray-500">
-        {breadcrumbItems.map((item, index) => (
-          <span key={item.item}>
-            {index > 0 && " / "}
-            {item.name}
-          </span>
-        ))}
+      <nav className="mb-6 text-sm text-neutral-500">
+        <ol className="flex flex-wrap items-center gap-2">
+          {breadcrumbItems.map((item, index) => {
+            const isLast = index === breadcrumbItems.length - 1
+
+            return (
+              <li key={item.item} className="flex items-center gap-2">
+                {index > 0 && <span>/</span>}
+                {isLast ? (
+                  <span className="text-neutral-950">{item.name}</span>
+                ) : (
+                  <Link href={item.item.replace(siteUrl, "") || "/"} className="hover:text-neutral-950">
+                    {item.name}
+                  </Link>
+                )}
+              </li>
+            )
+          })}
+        </ol>
       </nav>
 
       <h1 className="mb-6 text-3xl font-bold">{page.title}</h1>

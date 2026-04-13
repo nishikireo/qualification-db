@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { notFound } from "next/navigation"
 import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd"
 import { getQualifications, getRelations } from "@/lib/data"
@@ -92,8 +93,24 @@ export default async function ComparePage({ params }: Props) {
         ]}
       />
 
-      <nav className="mb-4 text-sm text-gray-500">
-        ホーム / 比較ページ / {left.name_short}と{right.name_short}の比較
+      <nav className="mb-6 text-sm text-neutral-500">
+        <ol className="flex flex-wrap items-center gap-2">
+          <li>
+            <Link href="/" className="hover:text-neutral-950">
+              ホーム
+            </Link>
+          </li>
+          <li>/</li>
+          <li>
+            <Link href="/lists/difficulty" className="hover:text-neutral-950">
+              資格一覧
+            </Link>
+          </li>
+          <li>/</li>
+          <li className="text-neutral-950">
+            {left.name_short}と{right.name_short}の比較
+          </li>
+        </ol>
       </nav>
 
       <h1 className="mb-4 text-3xl font-bold">
