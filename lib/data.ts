@@ -1,3 +1,4 @@
+import { cache } from "react"
 import { getSheetValues } from "./sheets"
 import type {
   Qualification,
@@ -28,7 +29,7 @@ function toNum(v: string) {
   return Number.isNaN(n) ? null : n
 }
 
-export async function getQualifications(): Promise<Qualification[]> {
+export const getQualifications = cache(async (): Promise<Qualification[]> => {
   const rows = await getSheetValues("qualifications_master!A:ZZ")
   const raw = rowsToObjects<Record<string, string>>(rows)
 
@@ -64,14 +65,16 @@ export async function getQualifications(): Promise<Qualification[]> {
       publish_flag: toBool(r.publish_flag),
     }))
     .filter((q) => q.publish_flag)
-}
+})
 
-export async function getQualificationBySlug(slug: string) {
-  const items = await getQualifications()
-  return items.find((q) => q.slug === slug) ?? null
-}
+export const getQualificationBySlug = cache(
+  async (slug: string): Promise<Qualification | null> => {
+    const items = await getQualifications()
+    return items.find((q) => q.slug === slug) ?? null
+  }
+)
 
-export async function getRelations(): Promise<QualificationRelation[]> {
+export const getRelations = cache(async (): Promise<QualificationRelation[]> => {
   const rows = await getSheetValues("qualification_relations!A:ZZ")
   const raw = rowsToObjects<Record<string, string>>(rows)
 
@@ -85,20 +88,22 @@ export async function getRelations(): Promise<QualificationRelation[]> {
       publish_flag: toBool(r.publish_flag),
     }))
     .filter((r) => r.publish_flag)
-}
+})
 
-export async function getComparedQualifications(slug: string) {
-  const [items, relations] = await Promise.all([getQualifications(), getRelations()])
-  const related = relations
-    .filter((r) => r.qualification_slug === slug && r.relation_type === "compared_with")
-    .sort((a, b) => b.relation_weight - a.relation_weight)
+export const getComparedQualifications = cache(
+  async (slug: string): Promise<Qualification[]> => {
+    const [items, relations] = await Promise.all([getQualifications(), getRelations()])
+    const related = relations
+      .filter((r) => r.qualification_slug === slug && r.relation_type === "compared_with")
+      .sort((a, b) => b.relation_weight - a.relation_weight)
 
-  return related
-    .map((r) => items.find((q) => q.slug === r.related_slug))
-    .filter(Boolean) as Qualification[]
-}
+    return related
+      .map((r) => items.find((q) => q.slug === r.related_slug))
+      .filter(Boolean) as Qualification[]
+  }
+)
 
-export async function getStaticPages(): Promise<SitePage[]> {
+export const getStaticPages = cache(async (): Promise<SitePage[]> => {
   const rows = await getSheetValues("site_pages!A:ZZ")
   const raw = rowsToObjects<Record<string, string>>(rows)
 
@@ -111,42 +116,46 @@ export async function getStaticPages(): Promise<SitePage[]> {
       publish_flag: toBool(r.publish_flag),
     }))
     .filter((p) => p.publish_flag)
-}
+})
 
-export async function getQualificationMetrics(): Promise<QualificationMetric[]> {
-  const rows = await getSheetValues("qualification_metrics!A:ZZ")
-  const raw = rowsToObjects<Record<string, string>>(rows)
+export const getQualificationMetrics = cache(
+  async (): Promise<QualificationMetric[]> => {
+    const rows = await getSheetValues("qualification_metrics!A:ZZ")
+    const raw = rowsToObjects<Record<string, string>>(rows)
 
-  return raw
-    .map((r) => ({
-      qualification_slug: r.qualification_slug,
-      metric_year: toNum(r.metric_year),
-      metric_period_label: r.metric_period_label,
-      metric_exam_type: r.metric_exam_type,
-      metric_subject: r.metric_subject,
-      applicants_count: toNum(r.applicants_count),
-      examinees_count: toNum(r.examinees_count),
-      passers_count: toNum(r.passers_count),
-      pass_rate: toNum(r.pass_rate),
-      exam_fee_tax_included: toNum(r.exam_fee_tax_included),
-      source_result_url: r.source_result_url,
-      source_fee_url: r.source_fee_url,
-      checked_at: r.checked_at,
-      publish_flag: toBool(r.publish_flag),
-      notes: r.notes,
-    }))
-    .filter((m) => m.publish_flag)
-}
+    return raw
+      .map((r) => ({
+        qualification_slug: r.qualification_slug,
+        metric_year: toNum(r.metric_year),
+        metric_period_label: r.metric_period_label,
+        metric_exam_type: r.metric_exam_type,
+        metric_subject: r.metric_subject,
+        applicants_count: toNum(r.applicants_count),
+        examinees_count: toNum(r.examinees_count),
+        passers_count: toNum(r.passers_count),
+        pass_rate: toNum(r.pass_rate),
+        exam_fee_tax_included: toNum(r.exam_fee_tax_included),
+        source_result_url: r.source_result_url,
+        source_fee_url: r.source_fee_url,
+        checked_at: r.checked_at,
+        publish_flag: toBool(r.publish_flag),
+        notes: r.notes,
+      }))
+      .filter((m) => m.publish_flag)
+  }
+)
 
-export async function getQualificationMetricsBySlug(slug: string) {
-  const metrics = await getQualificationMetrics()
+export const getQualificationMetricsBySlug = cache(
+  async (slug: string): Promise<QualificationMetric[]> => {
+    const metrics = await getQualificationMetrics()
 
-  return metrics
-    .filter((m) => m.qualification_slug === slug)
-    .sort((a, b) => {
-      const yearA = a.metric_year ?? 0
-      const yearB = b.metric_year ?? 0
-      if (yearA !== yearB) return yearB - yearA
-      return a.metric_subject.localeCompare(b.metric_subject)
-    })
-}
+    return metrics
+      .filter((m) => m.qualification_slug === slug)
+      .sort((a, b) => {
+        const yearA = a.metric_year ?? 0
+        const yearB = b.metric_year ?? 0
+        if (yearA !== yearB) return yearB - yearA
+        return a.metric_subject.localeCompare(b.metric_subject)
+      })
+  }
+)
