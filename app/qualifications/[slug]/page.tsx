@@ -78,7 +78,7 @@ export default async function QualificationPage({ params }: Props) {
   ])
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-10">
+    <main className="bg-white">
       <BreadcrumbJsonLd
         items={[
           { name: "ホーム", item: siteUrl },
@@ -87,255 +87,333 @@ export default async function QualificationPage({ params }: Props) {
         ]}
       />
 
-      <nav className="mb-6 text-sm text-neutral-500">
-        <ol className="flex flex-wrap items-center gap-2">
-          <li>
-            <Link href="/" className="hover:text-neutral-950">
-              ホーム
-            </Link>
-          </li>
-          <li>/</li>
-          <li>
-            <Link href="/lists/difficulty" className="hover:text-neutral-950">
-              資格一覧
-            </Link>
-          </li>
-          <li>/</li>
-          <li className="text-neutral-950">{q.name_short}</li>
-        </ol>
-      </nav>
+      <div className="mx-auto max-w-4xl px-6 py-10">
+        <nav className="mb-6 text-sm text-neutral-500">
+          <ol className="flex flex-wrap items-center gap-2">
+            <li>
+              <Link href="/" className="hover:text-neutral-950">
+                ホーム
+              </Link>
+            </li>
+            <li>/</li>
+            <li>
+              <Link href="/lists/difficulty" className="hover:text-neutral-950">
+                資格一覧
+              </Link>
+            </li>
+            <li>/</li>
+            <li className="text-neutral-950">{q.name_short}</li>
+          </ol>
+        </nav>
 
-      <h1 className="text-3xl font-bold mb-4">
-        {q.name_short}の難易度・合格率・勉強時間・受験料まとめ
-      </h1>
+        <header className="border-b border-neutral-200/70 pb-8">
+          <div className="text-sm text-neutral-500">{q.category_primary}</div>
+          <h1 className="mt-2 text-4xl font-semibold tracking-tight text-neutral-950">
+            {q.name_short}の難易度・合格率・勉強時間・受験料まとめ
+          </h1>
+          <p className="mt-4 max-w-3xl text-base leading-7 text-neutral-600">
+            {q.summary_short}
+          </p>
+        </header>
 
-      <p className="mb-8 text-lg">{q.summary_short}</p>
-
-      <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-        <div className="rounded-2xl border p-4">
-          <div className="text-sm">難易度</div>
-          <div className="text-2xl font-bold">{q.difficulty_score ?? "-"} / 100</div>
-        </div>
-        <div className="rounded-2xl border p-4">
-          <div className="text-sm">合格率</div>
-          <div className="text-2xl font-bold">{q.pass_rate_latest ?? "-"}%</div>
-        </div>
-        <div className="rounded-2xl border p-4">
-          <div className="text-sm">勉強時間</div>
-          <div className="text-2xl font-bold">
-            {q.study_hours_min ?? "-"}〜{q.study_hours_max ?? "-"}
+        <section className="grid grid-cols-2 gap-3 py-8 md:grid-cols-4">
+          <div className="rounded-lg border border-neutral-200/70 p-4">
+            <div className="text-[11px] text-neutral-500">難易度</div>
+            <div className="mt-1 text-lg font-medium text-neutral-950">
+              {q.difficulty_score ?? "-"} / 100
+            </div>
           </div>
-        </div>
-        <div className="rounded-2xl border p-4">
-          <div className="text-sm">受験料</div>
-          <div className="text-2xl font-bold">
-            {q.exam_fee_tax_included?.toLocaleString() ?? "-"}円
+          <div className="rounded-lg border border-neutral-200/70 p-4">
+            <div className="text-[11px] text-neutral-500">合格率</div>
+            <div className="mt-1 text-lg font-medium text-neutral-950">
+              {q.pass_rate_latest ?? "-"}%
+            </div>
           </div>
-        </div>
-      </section>
-
-      <section className="mb-10">
-        <h2 className="text-2xl font-semibold mb-4">基本情報</h2>
-        <table className="w-full border-collapse">
-          <tbody>
-            <tr className="border-b">
-              <th className="text-left py-2 pr-4">資格名</th>
-              <td>{q.name_ja}</td>
-            </tr>
-            <tr className="border-b">
-              <th className="text-left py-2 pr-4">カテゴリ</th>
-              <td>{q.category_primary}</td>
-            </tr>
-            <tr className="border-b">
-              <th className="text-left py-2 pr-4">種別</th>
-              <td>{q.qualification_type}</td>
-            </tr>
-            <tr className="border-b">
-              <th className="text-left py-2 pr-4">主催</th>
-              <td>{q.issuing_body}</td>
-            </tr>
-            <tr className="border-b">
-              <th className="text-left py-2 pr-4">試験回数</th>
-              <td>{q.exam_frequency_text}</td>
-            </tr>
-            <tr className="border-b">
-              <th className="text-left py-2 pr-4">受験資格</th>
-              <td>{q.eligibility_text}</td>
-            </tr>
-            <tr className="border-b">
-              <th className="text-left py-2 pr-4">試験形式</th>
-              <td>{q.exam_format_text}</td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-
-      {metrics.length > 0 && (
-        <section className="mb-10 overflow-x-auto">
-          <h2 className="text-2xl font-semibold mb-4">年度別データ</h2>
-          <table className="w-full min-w-[920px] border-collapse">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left py-2 pr-4">年度</th>
-                <th className="text-left py-2 pr-4">期間</th>
-                <th className="text-left py-2 pr-4">試験種別</th>
-                <th className="text-left py-2 pr-4">科目</th>
-                <th className="text-left py-2 pr-4">申込者数</th>
-                <th className="text-left py-2 pr-4">受験者数</th>
-                <th className="text-left py-2 pr-4">合格者数</th>
-                <th className="text-left py-2 pr-4">合格率</th>
-                <th className="text-left py-2 pr-4">受験料</th>
-                <th className="text-left py-2">出典</th>
-              </tr>
-            </thead>
-            <tbody>
-              {metrics.map((m, index) => (
-                <tr key={`${m.qualification_slug}-${m.metric_year}-${m.metric_period_label}-${m.metric_subject}-${index}`} className="border-b">
-                  <td className="py-2 pr-4">{m.metric_year ?? "-"}</td>
-                  <td className="py-2 pr-4">{m.metric_period_label || "-"}</td>
-                  <td className="py-2 pr-4">{examTypeLabel(m.metric_exam_type)}</td>
-                  <td className="py-2 pr-4">{subjectLabel(m.metric_subject)}</td>
-                  <td className="py-2 pr-4">{formatNumber(m.applicants_count)}</td>
-                  <td className="py-2 pr-4">{formatNumber(m.examinees_count)}</td>
-                  <td className="py-2 pr-4">{formatNumber(m.passers_count)}</td>
-                  <td className="py-2 pr-4">
-                    {m.pass_rate !== null && m.pass_rate !== undefined ? `${m.pass_rate}%` : "-"}
-                  </td>
-                  <td className="py-2 pr-4">
-                    {m.exam_fee_tax_included !== null && m.exam_fee_tax_included !== undefined
-                      ? `${m.exam_fee_tax_included.toLocaleString()}円`
-                      : "-"}
-                  </td>
-                  <td className="py-2">
-                    {m.source_result_url ? (
-                      <a
-                        href={m.source_result_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="underline"
-                      >
-                        結果
-                      </a>
-                    ) : (
-                      "-"
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="rounded-lg border border-neutral-200/70 p-4">
+            <div className="text-[11px] text-neutral-500">勉強時間</div>
+            <div className="mt-1 text-lg font-medium text-neutral-950">
+              {q.study_hours_min ?? "-"}〜{q.study_hours_max ?? "-"}
+            </div>
+          </div>
+          <div className="rounded-lg border border-neutral-200/70 p-4">
+            <div className="text-[11px] text-neutral-500">受験料</div>
+            <div className="mt-1 text-lg font-medium text-neutral-950">
+              {q.exam_fee_tax_included?.toLocaleString() ?? "-"}円
+            </div>
+          </div>
         </section>
-      )}
 
-      {pastLinks.length > 0 && (
-        <section className="mb-10">
-          <h2 className="text-2xl font-semibold mb-4">公式過去問リンク</h2>
-          <ul className="list-disc pl-6 space-y-2">
-            {pastLinks.map((link) => (
-              <li key={`${link.qualification_slug}-${link.link_title}`}>
-                <a
-                  href={link.link_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="underline"
+        <section className="border-t border-neutral-200/70 py-8">
+          <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
+            基本情報
+          </h2>
+          <div className="overflow-x-auto rounded-lg border border-neutral-200/70">
+            <table className="w-full border-collapse text-sm">
+              <tbody>
+                <tr className="border-b border-neutral-200/70">
+                  <th className="w-40 bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
+                    資格名
+                  </th>
+                  <td className="px-4 py-3 text-neutral-900">{q.name_ja}</td>
+                </tr>
+                <tr className="border-b border-neutral-200/70">
+                  <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
+                    カテゴリ
+                  </th>
+                  <td className="px-4 py-3 text-neutral-900">{q.category_primary}</td>
+                </tr>
+                <tr className="border-b border-neutral-200/70">
+                  <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
+                    種別
+                  </th>
+                  <td className="px-4 py-3 text-neutral-900">{q.qualification_type}</td>
+                </tr>
+                <tr className="border-b border-neutral-200/70">
+                  <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
+                    主催
+                  </th>
+                  <td className="px-4 py-3 text-neutral-900">{q.issuing_body}</td>
+                </tr>
+                <tr className="border-b border-neutral-200/70">
+                  <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
+                    試験回数
+                  </th>
+                  <td className="px-4 py-3 text-neutral-900">{q.exam_frequency_text}</td>
+                </tr>
+                <tr className="border-b border-neutral-200/70">
+                  <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
+                    受験資格
+                  </th>
+                  <td className="px-4 py-3 text-neutral-900">{q.eligibility_text}</td>
+                </tr>
+                <tr>
+                  <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
+                    試験形式
+                  </th>
+                  <td className="px-4 py-3 text-neutral-900">{q.exam_format_text}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        {metrics.length > 0 && (
+          <section className="border-t border-neutral-200/70 py-8">
+            <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
+              年度別データ
+            </h2>
+            <div className="overflow-x-auto rounded-lg border border-neutral-200/70">
+              <table className="w-full min-w-[920px] border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-neutral-200/70 bg-neutral-50">
+                    <th className="px-4 py-3 text-left font-medium text-neutral-600">年度</th>
+                    <th className="px-4 py-3 text-left font-medium text-neutral-600">期間</th>
+                    <th className="px-4 py-3 text-left font-medium text-neutral-600">試験種別</th>
+                    <th className="px-4 py-3 text-left font-medium text-neutral-600">科目</th>
+                    <th className="px-4 py-3 text-left font-medium text-neutral-600">申込者数</th>
+                    <th className="px-4 py-3 text-left font-medium text-neutral-600">受験者数</th>
+                    <th className="px-4 py-3 text-left font-medium text-neutral-600">合格者数</th>
+                    <th className="px-4 py-3 text-left font-medium text-neutral-600">合格率</th>
+                    <th className="px-4 py-3 text-left font-medium text-neutral-600">受験料</th>
+                    <th className="px-4 py-3 text-left font-medium text-neutral-600">出典</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {metrics.map((m, index) => (
+                    <tr
+                      key={`${m.qualification_slug}-${m.metric_year}-${m.metric_period_label}-${m.metric_subject}-${index}`}
+                      className="border-b border-neutral-200/70 last:border-b-0"
+                    >
+                      <td className="px-4 py-3 text-neutral-900">{m.metric_year ?? "-"}</td>
+                      <td className="px-4 py-3 text-neutral-900">{m.metric_period_label || "-"}</td>
+                      <td className="px-4 py-3 text-neutral-900">{examTypeLabel(m.metric_exam_type)}</td>
+                      <td className="px-4 py-3 text-neutral-900">{subjectLabel(m.metric_subject)}</td>
+                      <td className="px-4 py-3 text-neutral-900">{formatNumber(m.applicants_count)}</td>
+                      <td className="px-4 py-3 text-neutral-900">{formatNumber(m.examinees_count)}</td>
+                      <td className="px-4 py-3 text-neutral-900">{formatNumber(m.passers_count)}</td>
+                      <td className="px-4 py-3 text-neutral-900">
+                        {m.pass_rate !== null && m.pass_rate !== undefined ? `${m.pass_rate}%` : "-"}
+                      </td>
+                      <td className="px-4 py-3 text-neutral-900">
+                        {m.exam_fee_tax_included !== null && m.exam_fee_tax_included !== undefined
+                          ? `${m.exam_fee_tax_included.toLocaleString()}円`
+                          : "-"}
+                      </td>
+                      <td className="px-4 py-3">
+                        {m.source_result_url ? (
+                          <a
+                            href={m.source_result_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-neutral-700 underline hover:text-neutral-950"
+                          >
+                            結果
+                          </a>
+                        ) : (
+                          "-"
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
+
+        {pastLinks.length > 0 && (
+          <section className="border-t border-neutral-200/70 py-8">
+            <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
+              公式過去問リンク
+            </h2>
+            <div className="rounded-lg border border-neutral-200/70">
+              <ul className="divide-y divide-neutral-200/70">
+                {pastLinks.map((link) => (
+                  <li key={`${link.qualification_slug}-${link.link_title}`} className="px-4 py-4">
+                    <a
+                      href={link.link_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-sm text-neutral-700 underline hover:text-neutral-950"
+                    >
+                      {link.link_title}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
+        )}
+
+        {quizItems.length > 0 && (
+          <section className="border-t border-neutral-200/70 py-8">
+            <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
+              例題
+            </h2>
+            <div className="space-y-4">
+              {quizItems.map((quiz, index) => (
+                <div
+                  key={`${quiz.qualification_slug}-${index}`}
+                  className="rounded-lg border border-neutral-200/70 p-5"
                 >
-                  {link.link_title}
-                </a>
-              </li>
+                  <div className="text-[11px] text-neutral-500">問題 {index + 1}</div>
+                  <p className="mt-2 text-sm font-medium leading-7 text-neutral-950">
+                    {quiz.question_text}
+                  </p>
+
+                  <ul className="mt-4 space-y-2 text-sm text-neutral-700">
+                    {quiz.choice_1 && <li>1. {quiz.choice_1}</li>}
+                    {quiz.choice_2 && <li>2. {quiz.choice_2}</li>}
+                    {quiz.choice_3 && <li>3. {quiz.choice_3}</li>}
+                    {quiz.choice_4 && <li>4. {quiz.choice_4}</li>}
+                  </ul>
+
+                  <div className="mt-5 border-t border-neutral-200/70 pt-4 text-sm">
+                    <p className="text-neutral-900">
+                      <span className="font-medium">正解:</span> {quiz.answer_value}
+                    </p>
+                    <p className="mt-2 leading-7 text-neutral-600">
+                      <span className="font-medium text-neutral-900">解説:</span>{" "}
+                      {quiz.explanation}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <section className="border-t border-neutral-200/70 py-8">
+          <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
+            {q.name_short}の難易度
+          </h2>
+          <p className="text-sm leading-8 text-neutral-700">{q.difficulty_reason_text}</p>
+        </section>
+
+        <section className="border-t border-neutral-200/70 py-8">
+          <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
+            向いている人
+          </h2>
+          <ul className="list-disc space-y-2 pl-5 text-sm leading-7 text-neutral-700">
+            {splitLines(q.who_should_take).map((line) => (
+              <li key={line}>{line}</li>
             ))}
           </ul>
         </section>
-      )}
 
-      {quizItems.length > 0 && (
-        <section className="mb-10">
-          <h2 className="text-2xl font-semibold mb-4">例題</h2>
-          <div className="space-y-8">
-            {quizItems.map((quiz, index) => (
-              <div key={`${quiz.qualification_slug}-${index}`} className="rounded-2xl border p-5">
-                <div className="text-sm text-gray-500 mb-2">問題 {index + 1}</div>
-                <p className="mb-4 font-medium">{quiz.question_text}</p>
+        <section className="border-t border-neutral-200/70 py-8">
+          <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
+            向いていない人
+          </h2>
+          <ul className="list-disc space-y-2 pl-5 text-sm leading-7 text-neutral-700">
+            {splitLines(q.who_should_not_take).map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+        </section>
 
-                <ul className="space-y-2 mb-4">
-                  {quiz.choice_1 && <li>1. {quiz.choice_1}</li>}
-                  {quiz.choice_2 && <li>2. {quiz.choice_2}</li>}
-                  {quiz.choice_3 && <li>3. {quiz.choice_3}</li>}
-                  {quiz.choice_4 && <li>4. {quiz.choice_4}</li>}
-                </ul>
-
-                <div className="text-sm">
-                  <p>
-                    <span className="font-semibold">正解:</span> {quiz.answer_value}
-                  </p>
-                  <p className="mt-2 text-gray-700">
-                    <span className="font-semibold">解説:</span> {quiz.explanation}
-                  </p>
-                </div>
-              </div>
+        <section className="border-t border-neutral-200/70 py-8">
+          <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
+            比較されやすい資格
+          </h2>
+          <div className="grid gap-3 md:grid-cols-2">
+            {compared.map((item) => (
+              <Link
+                key={item.slug}
+                href={`/compare/${q.slug}-vs-${item.slug}`}
+                className="rounded-lg border border-neutral-200/70 p-4 text-sm text-neutral-700 transition hover:border-neutral-400 hover:text-neutral-950"
+              >
+                {q.name_short}と{item.name_short}を比較する
+              </Link>
             ))}
           </div>
         </section>
-      )}
 
-      <section className="mb-10">
-        <h2 className="text-2xl font-semibold mb-4">{q.name_short}の難易度</h2>
-        <p>{q.difficulty_reason_text}</p>
-      </section>
-
-      <section className="mb-10">
-        <h2 className="text-2xl font-semibold mb-4">向いている人</h2>
-        <ul className="list-disc pl-6 space-y-2">
-          {splitLines(q.who_should_take).map((line) => (
-            <li key={line}>{line}</li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="mb-10">
-        <h2 className="text-2xl font-semibold mb-4">向いていない人</h2>
-        <ul className="list-disc pl-6 space-y-2">
-          {splitLines(q.who_should_not_take).map((line) => (
-            <li key={line}>{line}</li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="mb-10">
-        <h2 className="text-2xl font-semibold mb-4">比較されやすい資格</h2>
-        <ul className="list-disc pl-6 space-y-2">
-          {compared.map((item) => (
-            <li key={item.slug}>{item.name_short}</li>
-          ))}
-        </ul>
-      </section>
-
-      <section>
-        <h2 className="text-2xl font-semibold mb-4">出典</h2>
-        <ul className="list-disc pl-6 space-y-2">
-          {q.source_pass_rate_url && (
-            <li>
-              <a href={q.source_pass_rate_url} target="_blank" rel="noreferrer" className="underline">
-                合格率の出典
-              </a>
-            </li>
-          )}
-          {q.source_fee_url && (
-            <li>
-              <a href={q.source_fee_url} target="_blank" rel="noreferrer" className="underline">
-                受験料の出典
-              </a>
-            </li>
-          )}
-          {q.source_eligibility_url && (
-            <li>
-              <a href={q.source_eligibility_url} target="_blank" rel="noreferrer" className="underline">
-                受験資格の出典
-              </a>
-            </li>
-          )}
-        </ul>
-        <p className="mt-4 text-sm text-gray-500">最終確認日: {q.last_verified_at}</p>
-      </section>
+        <section className="border-t border-neutral-200/70 py-8">
+          <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
+            出典
+          </h2>
+          <ul className="list-disc space-y-2 pl-5 text-sm text-neutral-700">
+            {q.source_pass_rate_url && (
+              <li>
+                <a
+                  href={q.source_pass_rate_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline hover:text-neutral-950"
+                >
+                  合格率の出典
+                </a>
+              </li>
+            )}
+            {q.source_fee_url && (
+              <li>
+                <a
+                  href={q.source_fee_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline hover:text-neutral-950"
+                >
+                  受験料の出典
+                </a>
+              </li>
+            )}
+            {q.source_eligibility_url && (
+              <li>
+                <a
+                  href={q.source_eligibility_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline hover:text-neutral-950"
+                >
+                  受験資格の出典
+                </a>
+              </li>
+            )}
+          </ul>
+          <p className="mt-4 text-sm text-neutral-500">最終確認日: {q.last_verified_at}</p>
+        </section>
+      </div>
     </main>
   )
 }
