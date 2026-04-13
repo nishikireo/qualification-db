@@ -1,5 +1,6 @@
+import fs from "node:fs/promises"
+import path from "node:path"
 import { cache } from "react"
-import { getSheetValues } from "./sheets"
 import type {
   Qualification,
   QualificationRelation,
@@ -7,16 +8,15 @@ import type {
   SitePage,
 } from "@/types/qualification"
 
-function rowsToObjects<T>(rows: string[][]): T[] {
-  if (rows.length === 0) return []
-  const [header, ...data] = rows
-  return data.map((row) => {
-    const obj: Record<string, string> = {}
-    header.forEach((key, i) => {
-      obj[key] = row[i] ?? ""
-    })
-    return obj as T
-  })
+type RawRow = Record<string, string>
+
+type SiteDataFile = {
+  fetchedAt: string
+  qualifications_master: RawRow[]
+  qualification_relations: RawRow[]
+  qualification_metrics: RawRow[]
+  site_pages: RawRow[]
+  settings: RawRow[]
 }
 
 function toBool(v: string) {
@@ -29,11 +29,16 @@ function toNum(v: string) {
   return Number.isNaN(n) ? null : n
 }
 
-export const getQualifications = cache(async (): Promise<Qualification[]> => {
-  const rows = await getSheetValues("qualifications_master!A:ZZ")
-  const raw = rowsToObjects<Record<string, string>>(rows)
+const getSiteData = cache(async (): Promise<SiteDataFile> => {
+  const filePath = path.join(process.cwd(), "data", "site-data.json")
+  const text = await fs.readFile(filePath, "utf-8")
+  return JSON.parse(text) as SiteDataFile
+})
 
-  return raw
+export const getQualifications = cache(async (): Promise<Qualification[]> => {
+  const data = await getSiteData()
+
+  return data.qualifications_master
     .map((r) => ({
       slug: r.slug,
       name_ja: r.name_ja,
@@ -75,10 +80,9 @@ export const getQualificationBySlug = cache(
 )
 
 export const getRelations = cache(async (): Promise<QualificationRelation[]> => {
-  const rows = await getSheetValues("qualification_relations!A:ZZ")
-  const raw = rowsToObjects<Record<string, string>>(rows)
+  const data = await getSiteData()
 
-  return raw
+  return data.qualification_relations
     .map((r) => ({
       qualification_slug: r.qualification_slug,
       related_slug: r.related_slug,
@@ -93,6 +97,7 @@ export const getRelations = cache(async (): Promise<QualificationRelation[]> => 
 export const getComparedQualifications = cache(
   async (slug: string): Promise<Qualification[]> => {
     const [items, relations] = await Promise.all([getQualifications(), getRelations()])
+
     const related = relations
       .filter((r) => r.qualification_slug === slug && r.relation_type === "compared_with")
       .sort((a, b) => b.relation_weight - a.relation_weight)
@@ -104,10 +109,9 @@ export const getComparedQualifications = cache(
 )
 
 export const getStaticPages = cache(async (): Promise<SitePage[]> => {
-  const rows = await getSheetValues("site_pages!A:ZZ")
-  const raw = rowsToObjects<Record<string, string>>(rows)
+  const data = await getSiteData()
 
-  return raw
+  return data.site_pages
     .map((r) => ({
       slug: r.slug,
       page_type: r.page_type,
@@ -120,10 +124,9 @@ export const getStaticPages = cache(async (): Promise<SitePage[]> => {
 
 export const getQualificationMetrics = cache(
   async (): Promise<QualificationMetric[]> => {
-    const rows = await getSheetValues("qualification_metrics!A:ZZ")
-    const raw = rowsToObjects<Record<string, string>>(rows)
+    const data = await getSiteData()
 
-    return raw
+    return data.qualification_metrics
       .map((r) => ({
         qualification_slug: r.qualification_slug,
         metric_year: toNum(r.metric_year),
