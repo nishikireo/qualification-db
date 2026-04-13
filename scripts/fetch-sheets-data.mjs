@@ -36,11 +36,13 @@ async function main() {
   const response = await sheets.spreadsheets.values.batchGet({
     spreadsheetId,
     ranges: [
-      "qualifications_master!A:ZZ",
-      "qualification_relations!A:ZZ",
-      "qualification_metrics!A:ZZ",
-      "site_pages!A:ZZ",
-      "settings!A:ZZ",
+        "qualifications_master!A:ZZ",
+        "qualification_relations!A:ZZ",
+        "qualification_metrics!A:ZZ",
+        "qualification_past_links!A:ZZ",
+        "qualification_quiz_items!A:ZZ",
+        "site_pages!A:ZZ",
+        "settings!A:ZZ",
     ],
   })
 
@@ -58,6 +60,8 @@ async function main() {
     qualification_metrics: rowsToObjects(getRangeValues("qualification_metrics")),
     site_pages: rowsToObjects(getRangeValues("site_pages")),
     settings: rowsToObjects(getRangeValues("settings")),
+    qualification_past_links: rowsToObjects(getRangeValues("qualification_past_links")),
+    qualification_quiz_items: rowsToObjects(getRangeValues("qualification_quiz_items")),
   }
 
   const outputDir = path.join(process.cwd(), "data")

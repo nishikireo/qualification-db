@@ -5,6 +5,8 @@ import {
   getQualificationBySlug,
   getQualifications,
   getQualificationMetricsBySlug,
+  getQualificationPastLinksBySlug,
+  getQualificationQuizItemsBySlug,
 } from "@/lib/data"
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://openshikaku.jp"
@@ -67,9 +69,11 @@ export default async function QualificationPage({ params }: Props) {
   const q = await getQualificationBySlug(slug)
   if (!q) notFound()
 
-  const [compared, metrics] = await Promise.all([
+  const [compared, metrics, pastLinks, quizItems] = await Promise.all([
     getComparedQualifications(slug),
     getQualificationMetricsBySlug(slug),
+    getQualificationPastLinksBySlug(slug),
+    getQualificationQuizItemsBySlug(slug),
   ])
 
   return (
@@ -205,6 +209,56 @@ export default async function QualificationPage({ params }: Props) {
               ))}
             </tbody>
           </table>
+        </section>
+      )}
+
+      {pastLinks.length > 0 && (
+        <section className="mb-10">
+          <h2 className="text-2xl font-semibold mb-4">公式過去問リンク</h2>
+          <ul className="list-disc pl-6 space-y-2">
+            {pastLinks.map((link) => (
+              <li key={`${link.qualification_slug}-${link.link_title}`}>
+                <a
+                  href={link.link_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline"
+                >
+                  {link.link_title}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {quizItems.length > 0 && (
+        <section className="mb-10">
+          <h2 className="text-2xl font-semibold mb-4">例題</h2>
+          <div className="space-y-8">
+            {quizItems.map((quiz, index) => (
+              <div key={`${quiz.qualification_slug}-${index}`} className="rounded-2xl border p-5">
+                <div className="text-sm text-gray-500 mb-2">問題 {index + 1}</div>
+                <p className="mb-4 font-medium">{quiz.question_text}</p>
+
+                <ul className="space-y-2 mb-4">
+                  {quiz.choice_1 && <li>1. {quiz.choice_1}</li>}
+                  {quiz.choice_2 && <li>2. {quiz.choice_2}</li>}
+                  {quiz.choice_3 && <li>3. {quiz.choice_3}</li>}
+                  {quiz.choice_4 && <li>4. {quiz.choice_4}</li>}
+                </ul>
+
+                <div className="text-sm">
+                  <p>
+                    <span className="font-semibold">正解:</span> {quiz.answer_value}
+                  </p>
+                  <p className="mt-2 text-gray-700">
+                    <span className="font-semibold">解説:</span> {quiz.explanation}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
         </section>
       )}
 

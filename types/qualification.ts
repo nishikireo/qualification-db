@@ -63,3 +63,27 @@ export type QualificationMetric = {
   publish_flag: boolean
   notes?: string
 }
+
+export type QualificationPastLink = {
+  qualification_slug: string
+  link_type: string
+  link_title: string
+  link_url: string
+  display_order: number | null
+  publish_flag: boolean
+  notes?: string
+}
+
+export type QualificationQuizItem = {
+  qualification_slug: string
+  question_type: string
+  question_text: string
+  choice_1?: string
+  choice_2?: string
+  choice_3?: string
+  choice_4?: string
+  answer_value: string
+  explanation: string
+  display_order: number | null
+  publish_flag: boolean
+}

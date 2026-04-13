@@ -5,6 +5,8 @@ import type {
   Qualification,
   QualificationRelation,
   QualificationMetric,
+  QualificationPastLink,
+  QualificationQuizItem,
   SitePage,
 } from "@/types/qualification"
 
@@ -15,6 +17,8 @@ type SiteDataFile = {
   qualifications_master: RawRow[]
   qualification_relations: RawRow[]
   qualification_metrics: RawRow[]
+  qualification_past_links: RawRow[]
+  qualification_quiz_items: RawRow[]
   site_pages: RawRow[]
   settings: RawRow[]
 }
@@ -160,5 +164,65 @@ export const getQualificationMetricsBySlug = cache(
         if (yearA !== yearB) return yearB - yearA
         return a.metric_subject.localeCompare(b.metric_subject)
       })
+  }
+)
+
+export const getQualificationPastLinks = cache(
+  async (): Promise<QualificationPastLink[]> => {
+    const data = await getSiteData()
+
+    return data.qualification_past_links
+      .map((r) => ({
+        qualification_slug: r.qualification_slug,
+        link_type: r.link_type,
+        link_title: r.link_title,
+        link_url: r.link_url,
+        display_order: toNum(r.display_order),
+        publish_flag: toBool(r.publish_flag),
+        notes: r.notes,
+      }))
+      .filter((item) => item.publish_flag)
+  }
+)
+
+export const getQualificationPastLinksBySlug = cache(
+  async (slug: string): Promise<QualificationPastLink[]> => {
+    const items = await getQualificationPastLinks()
+
+    return items
+      .filter((item) => item.qualification_slug === slug)
+      .sort((a, b) => (a.display_order ?? 9999) - (b.display_order ?? 9999))
+  }
+)
+
+export const getQualificationQuizItems = cache(
+  async (): Promise<QualificationQuizItem[]> => {
+    const data = await getSiteData()
+
+    return data.qualification_quiz_items
+      .map((r) => ({
+        qualification_slug: r.qualification_slug,
+        question_type: r.question_type,
+        question_text: r.question_text,
+        choice_1: r.choice_1,
+        choice_2: r.choice_2,
+        choice_3: r.choice_3,
+        choice_4: r.choice_4,
+        answer_value: r.answer_value,
+        explanation: r.explanation,
+        display_order: toNum(r.display_order),
+        publish_flag: toBool(r.publish_flag),
+      }))
+      .filter((item) => item.publish_flag)
+  }
+)
+
+export const getQualificationQuizItemsBySlug = cache(
+  async (slug: string): Promise<QualificationQuizItem[]> => {
+    const items = await getQualificationQuizItems()
+
+    return items
+      .filter((item) => item.qualification_slug === slug)
+      .sort((a, b) => (a.display_order ?? 9999) - (b.display_order ?? 9999))
   }
 )
