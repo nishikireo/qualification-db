@@ -9,7 +9,7 @@ export default function Footer() {
             オープン資格
           </Link>
           <p className="mt-2 text-sm text-neutral-500">
-            資格を感覚ではなくデータで比較する。
+            資格をもっと、オープンに。
           </p>
         </div>
 

@@ -12,12 +12,6 @@ export default function Header() {
           <Link href="/lists/difficulty" className="hover:text-neutral-950">
             資格一覧
           </Link>
-          <Link href="/about" className="hover:text-neutral-950">
-            このサイトについて
-          </Link>
-          <Link href="/sources" className="hover:text-neutral-950">
-            出典ポリシー
-          </Link>
         </nav>
       </div>
     </header>

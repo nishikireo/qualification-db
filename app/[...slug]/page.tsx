@@ -48,7 +48,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: page.title,
-    description: `${page.title} | 資格DB`,
+    description: `${page.title} | オープン資格`,
   }
 }
 

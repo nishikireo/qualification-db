@@ -346,6 +346,7 @@ export default async function QualificationPage({ params, searchParams }: Props)
 
                 return (
                   <div
+                    id={`quiz-${index + 1}`}
                     key={`${quiz.qualification_slug}-${index}`}
                     className="rounded-lg border border-neutral-200/70 p-5"
                   >
@@ -368,7 +369,8 @@ export default async function QualificationPage({ params, searchParams }: Props)
                         return (
                           <Link
                             key={choice.value}
-                            href={`/qualifications/${q.slug}?${nextParams.toString()}`}
+                            href={`/qualifications/${q.slug}?${nextParams.toString()}#quiz-${index + 1}`}
+                            scroll={false}
                             className={`rounded-md border px-3 py-2 text-sm transition ${
                               isSelected
                                 ? "border-neutral-950 bg-neutral-950 text-white"
