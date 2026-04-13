@@ -1,11 +1,49 @@
 import { notFound } from "next/navigation"
 import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd"
-import { getComparedQualifications, getQualificationBySlug, getQualifications } from "@/lib/data"
+import {
+  getComparedQualifications,
+  getQualificationBySlug,
+  getQualifications,
+  getQualificationMetricsBySlug,
+} from "@/lib/data"
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://example.com"
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://openshikaku.jp"
 
 type Props = {
   params: Promise<{ slug: string }>
+}
+
+function formatNumber(value: number | null | undefined) {
+  if (value === null || value === undefined) return "-"
+  return value.toLocaleString()
+}
+
+function splitLines(text: string | undefined) {
+  if (!text) return []
+  return text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+}
+
+function subjectLabel(subject: string) {
+  const map: Record<string, string> = {
+    overall: "総合",
+    theory: "学科",
+    practical: "実技",
+  }
+
+  return map[subject] ?? subject
+}
+
+function examTypeLabel(examType: string) {
+  const map: Record<string, string> = {
+    paper: "紙試験",
+    cbt: "CBT",
+    unified: "統一試験",
+  }
+
+  return map[examType] ?? examType
 }
 
 export async function generateStaticParams() {
@@ -19,7 +57,7 @@ export async function generateMetadata({ params }: Props) {
   if (!q) return {}
 
   return {
-    title: `${q.name_short}の難易度・合格率・勉強時間・受験料 | 資格DB`,
+    title: `${q.name_short}の難易度・合格率・勉強時間・受験料 | オープン資格`,
     description: `${q.name_short}の難易度、合格率、勉強時間、受験料、独学しやすさ、転職価値をデータで整理しています。`,
   }
 }
@@ -29,7 +67,10 @@ export default async function QualificationPage({ params }: Props) {
   const q = await getQualificationBySlug(slug)
   if (!q) notFound()
 
-  const compared = await getComparedQualifications(slug)
+  const [compared, metrics] = await Promise.all([
+    getComparedQualifications(slug),
+    getQualificationMetricsBySlug(slug),
+  ])
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-10">
@@ -110,6 +151,63 @@ export default async function QualificationPage({ params }: Props) {
         </table>
       </section>
 
+      {metrics.length > 0 && (
+        <section className="mb-10 overflow-x-auto">
+          <h2 className="text-2xl font-semibold mb-4">年度別データ</h2>
+          <table className="w-full min-w-[920px] border-collapse">
+            <thead>
+              <tr className="border-b">
+                <th className="text-left py-2 pr-4">年度</th>
+                <th className="text-left py-2 pr-4">期間</th>
+                <th className="text-left py-2 pr-4">試験種別</th>
+                <th className="text-left py-2 pr-4">科目</th>
+                <th className="text-left py-2 pr-4">申込者数</th>
+                <th className="text-left py-2 pr-4">受験者数</th>
+                <th className="text-left py-2 pr-4">合格者数</th>
+                <th className="text-left py-2 pr-4">合格率</th>
+                <th className="text-left py-2 pr-4">受験料</th>
+                <th className="text-left py-2">出典</th>
+              </tr>
+            </thead>
+            <tbody>
+              {metrics.map((m, index) => (
+                <tr key={`${m.qualification_slug}-${m.metric_year}-${m.metric_period_label}-${m.metric_subject}-${index}`} className="border-b">
+                  <td className="py-2 pr-4">{m.metric_year ?? "-"}</td>
+                  <td className="py-2 pr-4">{m.metric_period_label || "-"}</td>
+                  <td className="py-2 pr-4">{examTypeLabel(m.metric_exam_type)}</td>
+                  <td className="py-2 pr-4">{subjectLabel(m.metric_subject)}</td>
+                  <td className="py-2 pr-4">{formatNumber(m.applicants_count)}</td>
+                  <td className="py-2 pr-4">{formatNumber(m.examinees_count)}</td>
+                  <td className="py-2 pr-4">{formatNumber(m.passers_count)}</td>
+                  <td className="py-2 pr-4">
+                    {m.pass_rate !== null && m.pass_rate !== undefined ? `${m.pass_rate}%` : "-"}
+                  </td>
+                  <td className="py-2 pr-4">
+                    {m.exam_fee_tax_included !== null && m.exam_fee_tax_included !== undefined
+                      ? `${m.exam_fee_tax_included.toLocaleString()}円`
+                      : "-"}
+                  </td>
+                  <td className="py-2">
+                    {m.source_result_url ? (
+                      <a
+                        href={m.source_result_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="underline"
+                      >
+                        結果
+                      </a>
+                    ) : (
+                      "-"
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )}
+
       <section className="mb-10">
         <h2 className="text-2xl font-semibold mb-4">{q.name_short}の難易度</h2>
         <p>{q.difficulty_reason_text}</p>
@@ -118,7 +216,7 @@ export default async function QualificationPage({ params }: Props) {
       <section className="mb-10">
         <h2 className="text-2xl font-semibold mb-4">向いている人</h2>
         <ul className="list-disc pl-6 space-y-2">
-          {q.who_should_take.split("\n").filter(Boolean).map((line) => (
+          {splitLines(q.who_should_take).map((line) => (
             <li key={line}>{line}</li>
           ))}
         </ul>
@@ -127,19 +225,47 @@ export default async function QualificationPage({ params }: Props) {
       <section className="mb-10">
         <h2 className="text-2xl font-semibold mb-4">向いていない人</h2>
         <ul className="list-disc pl-6 space-y-2">
-          {q.who_should_not_take.split("\n").filter(Boolean).map((line) => (
+          {splitLines(q.who_should_not_take).map((line) => (
             <li key={line}>{line}</li>
           ))}
         </ul>
       </section>
 
-      <section>
+      <section className="mb-10">
         <h2 className="text-2xl font-semibold mb-4">比較されやすい資格</h2>
         <ul className="list-disc pl-6 space-y-2">
           {compared.map((item) => (
             <li key={item.slug}>{item.name_short}</li>
           ))}
         </ul>
+      </section>
+
+      <section>
+        <h2 className="text-2xl font-semibold mb-4">出典</h2>
+        <ul className="list-disc pl-6 space-y-2">
+          {q.source_pass_rate_url && (
+            <li>
+              <a href={q.source_pass_rate_url} target="_blank" rel="noreferrer" className="underline">
+                合格率の出典
+              </a>
+            </li>
+          )}
+          {q.source_fee_url && (
+            <li>
+              <a href={q.source_fee_url} target="_blank" rel="noreferrer" className="underline">
+                受験料の出典
+              </a>
+            </li>
+          )}
+          {q.source_eligibility_url && (
+            <li>
+              <a href={q.source_eligibility_url} target="_blank" rel="noreferrer" className="underline">
+                受験資格の出典
+              </a>
+            </li>
+          )}
+        </ul>
+        <p className="mt-4 text-sm text-gray-500">最終確認日: {q.last_verified_at}</p>
       </section>
     </main>
   )
