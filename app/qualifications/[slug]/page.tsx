@@ -14,6 +14,7 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://openshikaku.jp"
 
 type Props = {
   params: Promise<{ slug: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
 function formatNumber(value: number | null | undefined) {
@@ -49,6 +50,35 @@ function examTypeLabel(examType: string) {
   return map[examType] ?? examType
 }
 
+function getSearchParamValue(
+  value: string | string[] | undefined
+): string | undefined {
+  if (Array.isArray(value)) return value[0]
+  return value
+}
+
+function getQuizChoiceEntries(quiz: {
+  question_type: string
+  choice_1?: string
+  choice_2?: string
+  choice_3?: string
+  choice_4?: string
+}) {
+  if (quiz.question_type === "ox") {
+    return [
+      { value: "○", label: quiz.choice_1 ?? "○" },
+      { value: "×", label: quiz.choice_2 ?? "×" },
+    ]
+  }
+
+  return [
+    { value: "1", label: quiz.choice_1 ?? "" },
+    { value: "2", label: quiz.choice_2 ?? "" },
+    { value: "3", label: quiz.choice_3 ?? "" },
+    { value: "4", label: quiz.choice_4 ?? "" },
+  ].filter((choice) => choice.label)
+}
+
 export async function generateStaticParams() {
   const qualifications = await getQualifications()
   return qualifications.map((q) => ({ slug: q.slug }))
@@ -65,17 +95,28 @@ export async function generateMetadata({ params }: Props) {
   }
 }
 
-export default async function QualificationPage({ params }: Props) {
+export default async function QualificationPage({ params, searchParams }: Props) {
   const { slug } = await params
+  const resolvedSearchParams = await searchParams
   const q = await getQualificationBySlug(slug)
   if (!q) notFound()
 
-  const [compared, metrics, pastLinks, quizItems] = await Promise.all([
+  const [compared, metrics, pastLinks, quizItems, allQualifications] = await Promise.all([
     getComparedQualifications(slug),
     getQualificationMetricsBySlug(slug),
     getQualificationPastLinksBySlug(slug),
     getQualificationQuizItemsBySlug(slug),
+    getQualifications(),
   ])
+
+  const sameCategoryQualifications = allQualifications
+    .filter(
+      (item) =>
+        item.slug !== q.slug &&
+        item.category_primary === q.category_primary
+    )
+    .sort((a, b) => (b.career_value_score ?? 0) - (a.career_value_score ?? 0))
+    .slice(0, 8)
 
   return (
     <main className="bg-white">
@@ -261,68 +302,6 @@ export default async function QualificationPage({ params }: Props) {
           </section>
         )}
 
-        {pastLinks.length > 0 && (
-          <section className="border-t border-neutral-200/70 py-8">
-            <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
-              公式過去問リンク
-            </h2>
-            <div className="rounded-lg border border-neutral-200/70">
-              <ul className="divide-y divide-neutral-200/70">
-                {pastLinks.map((link) => (
-                  <li key={`${link.qualification_slug}-${link.link_title}`} className="px-4 py-4">
-                    <a
-                      href={link.link_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-sm text-neutral-700 underline hover:text-neutral-950"
-                    >
-                      {link.link_title}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </section>
-        )}
-
-        {quizItems.length > 0 && (
-          <section className="border-t border-neutral-200/70 py-8">
-            <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
-              例題
-            </h2>
-            <div className="space-y-4">
-              {quizItems.map((quiz, index) => (
-                <div
-                  key={`${quiz.qualification_slug}-${index}`}
-                  className="rounded-lg border border-neutral-200/70 p-5"
-                >
-                  <div className="text-[11px] text-neutral-500">問題 {index + 1}</div>
-                  <p className="mt-2 text-sm font-medium leading-7 text-neutral-950">
-                    {quiz.question_text}
-                  </p>
-
-                  <ul className="mt-4 space-y-2 text-sm text-neutral-700">
-                    {quiz.choice_1 && <li>1. {quiz.choice_1}</li>}
-                    {quiz.choice_2 && <li>2. {quiz.choice_2}</li>}
-                    {quiz.choice_3 && <li>3. {quiz.choice_3}</li>}
-                    {quiz.choice_4 && <li>4. {quiz.choice_4}</li>}
-                  </ul>
-
-                  <div className="mt-5 border-t border-neutral-200/70 pt-4 text-sm">
-                    <p className="text-neutral-900">
-                      <span className="font-medium">正解:</span> {quiz.answer_value}
-                    </p>
-                    <p className="mt-2 leading-7 text-neutral-600">
-                      <span className="font-medium text-neutral-900">解説:</span>{" "}
-                      {quiz.explanation}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
         <section className="border-t border-neutral-200/70 py-8">
           <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
             {q.name_short}の難易度
@@ -352,6 +331,101 @@ export default async function QualificationPage({ params }: Props) {
           </ul>
         </section>
 
+        {quizItems.length > 0 && (
+          <section className="border-t border-neutral-200/70 py-8">
+            <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
+              例題
+            </h2>
+            <div className="space-y-4">
+              {quizItems.map((quiz, index) => {
+                const answerKey = `quiz_${index + 1}`
+                const selectedAnswer = getSearchParamValue(resolvedSearchParams[answerKey])
+                const isAnswered = Boolean(selectedAnswer)
+                const isCorrect = selectedAnswer === quiz.answer_value
+                const choices = getQuizChoiceEntries(quiz)
+
+                return (
+                  <div
+                    key={`${quiz.qualification_slug}-${index}`}
+                    className="rounded-lg border border-neutral-200/70 p-5"
+                  >
+                    <div className="text-[11px] text-neutral-500">問題 {index + 1}</div>
+                    <p className="mt-2 text-sm font-medium leading-7 text-neutral-950">
+                      {quiz.question_text}
+                    </p>
+
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {choices.map((choice) => {
+                        const nextParams = new URLSearchParams()
+                        Object.entries(resolvedSearchParams).forEach(([key, value]) => {
+                          const normalized = getSearchParamValue(value)
+                          if (normalized) nextParams.set(key, normalized)
+                        })
+                        nextParams.set(answerKey, choice.value)
+
+                        const isSelected = selectedAnswer === choice.value
+
+                        return (
+                          <Link
+                            key={choice.value}
+                            href={`/qualifications/${q.slug}?${nextParams.toString()}`}
+                            className={`rounded-md border px-3 py-2 text-sm transition ${
+                              isSelected
+                                ? "border-neutral-950 bg-neutral-950 text-white"
+                                : "border-neutral-200/70 text-neutral-700 hover:border-neutral-400 hover:text-neutral-950"
+                            }`}
+                          >
+                            {choice.label}
+                          </Link>
+                        )
+                      })}
+                    </div>
+
+                    {isAnswered && (
+                      <div className="mt-5 border-t border-neutral-200/70 pt-4 text-sm">
+                        <p className={isCorrect ? "text-green-700" : "text-red-700"}>
+                          <span className="font-medium">判定:</span> {isCorrect ? "正解" : "不正解"}
+                        </p>
+                        <p className="mt-2 text-neutral-900">
+                          <span className="font-medium">正解:</span> {quiz.answer_value}
+                        </p>
+                        <p className="mt-2 leading-7 text-neutral-600">
+                          <span className="font-medium text-neutral-900">解説:</span>{" "}
+                          {quiz.explanation}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </section>
+        )}
+
+        {pastLinks.length > 0 && (
+          <section className="border-t border-neutral-200/70 py-8">
+            <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
+              公式過去問リンク
+            </h2>
+            <div className="rounded-lg border border-neutral-200/70">
+              <ul className="divide-y divide-neutral-200/70">
+                {pastLinks.map((link) => (
+                  <li key={`${link.qualification_slug}-${link.link_title}`} className="px-4 py-4">
+                    <a
+                      href={link.link_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-sm text-neutral-700 underline hover:text-neutral-950"
+                    >
+                      {link.link_title}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
+        )}
+
         <section className="border-t border-neutral-200/70 py-8">
           <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
             比較されやすい資格
@@ -368,6 +442,31 @@ export default async function QualificationPage({ params }: Props) {
             ))}
           </div>
         </section>
+
+        {sameCategoryQualifications.length > 0 && (
+          <section className="border-t border-neutral-200/70 py-8">
+            <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
+              同じカテゴリーの資格
+            </h2>
+            <div className="grid gap-3 md:grid-cols-2">
+              {sameCategoryQualifications.map((item) => (
+                <Link
+                  key={item.slug}
+                  href={`/qualifications/${item.slug}`}
+                  className="rounded-lg border border-neutral-200/70 p-4 text-sm text-neutral-700 transition hover:border-neutral-400 hover:text-neutral-950"
+                >
+                  <div className="text-[11px] text-neutral-500">{item.category_primary}</div>
+                  <div className="mt-1 font-medium text-neutral-950">{item.name_short}</div>
+                  {item.summary_short && (
+                    <p className="mt-2 line-clamp-2 text-sm leading-6 text-neutral-600">
+                      {item.summary_short}
+                    </p>
+                  )}
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="border-t border-neutral-200/70 py-8">
           <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
