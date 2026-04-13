@@ -1,13 +1,14 @@
+import { cache } from "react"
 import { google } from "googleapis"
 
 const SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
 
-function getAuth() {
+const getAuth = cache(() => {
   const clientEmail = process.env.GOOGLE_CLIENT_EMAIL
   const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n")
 
   if (!clientEmail || !privateKey) {
-    throw new Error("Google認証情報が未設定です")
+    throw new Error("Missing Google service account env vars")
   }
 
   return new google.auth.JWT({
@@ -15,15 +16,19 @@ function getAuth() {
     key: privateKey,
     scopes: SCOPES,
   })
-}
+})
 
-export async function getSheetValues(range: string) {
+const getSheetsClient = cache(() => {
   const auth = getAuth()
-  const sheets = google.sheets({ version: "v4", auth })
+  return google.sheets({ version: "v4", auth })
+})
+
+export const getSheetValues = cache(async (range: string): Promise<string[][]> => {
+  const sheets = getSheetsClient()
   const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID
 
   if (!spreadsheetId) {
-    throw new Error("スプレッドシートIDが未設定です")
+    throw new Error("Missing GOOGLE_SHEETS_SPREADSHEET_ID")
   }
 
   const res = await sheets.spreadsheets.values.get({
@@ -31,5 +36,5 @@ export async function getSheetValues(range: string) {
     range,
   })
 
-  return res.data.values ?? []
-}
+  return (res.data.values ?? []) as string[][]
+})
