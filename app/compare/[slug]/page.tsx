@@ -27,6 +27,11 @@ function splitLines(text: string | undefined) {
     .filter(Boolean)
 }
 
+function salaryLabel(min: number | null | undefined, max: number | null | undefined) {
+  if (min === null || min === undefined || max === null || max === undefined) return "-"
+  return `${min}〜${max}万円`
+}
+
 export async function generateStaticParams() {
   const relations = await getRelations()
 
@@ -195,6 +200,17 @@ export default async function ComparePage({ params }: Props) {
                   </td>
                   <td className="px-4 py-3 text-neutral-900">
                     {right.exam_fee_tax_included?.toLocaleString() ?? "-"}円
+                  </td>
+                </tr>
+                <tr className="border-b border-neutral-200/70">
+                  <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
+                    平均年収
+                  </th>
+                  <td className="px-4 py-3 text-neutral-900">
+                    {salaryLabel(left.average_salary_min, left.average_salary_max)}
+                  </td>
+                  <td className="px-4 py-3 text-neutral-900">
+                    {salaryLabel(right.average_salary_min, right.average_salary_max)}
                   </td>
                 </tr>
                 <tr className="border-b border-neutral-200/70">

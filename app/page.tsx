@@ -21,6 +21,11 @@ function feeLabel(value: number | null | undefined) {
   return `${value.toLocaleString()}円`
 }
 
+function salaryLabel(min: number | null | undefined, max: number | null | undefined) {
+  if (min === null || min === undefined || max === null || max === undefined) return "-"
+  return `${min}〜${max}万円`
+}
+
 function hoursLabel(min: number | null | undefined, max: number | null | undefined) {
   if (min === null || min === undefined || max === null || max === undefined) return "-"
   return `${min}〜${max}時間`
@@ -192,9 +197,9 @@ export default async function HomePage({ searchParams }: Props) {
                     </div>
                   </div>
                   <div>
-                    <div className="text-[11px] text-neutral-500">転職価値</div>
+                    <div className="text-[11px] text-neutral-500">平均年収</div>
                     <div className="mt-1 text-neutral-900">
-                      {scoreLabel(q.career_value_score)}
+                      {salaryLabel(q.average_salary_min, q.average_salary_max)}
                     </div>
                   </div>
                 </div>

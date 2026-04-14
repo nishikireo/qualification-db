@@ -22,6 +22,11 @@ function formatNumber(value: number | null | undefined) {
   return value.toLocaleString()
 }
 
+function formatSalaryRange(min: number | null | undefined, max: number | null | undefined) {
+  if (min === null || min === undefined || max === null || max === undefined) return "-"
+  return `${min}〜${max}万円`
+}
+
 function splitLines(text: string | undefined) {
   if (!text) return []
   return text
@@ -157,7 +162,7 @@ export default async function QualificationPage({ params, searchParams }: Props)
           </p>
         </header>
 
-        <section className="grid grid-cols-2 gap-3 py-8 md:grid-cols-4">
+        <section className="grid grid-cols-2 gap-3 py-8 md:grid-cols-5">
           <div className="rounded-lg border border-neutral-200/70 p-4">
             <div className="text-[11px] text-neutral-500">難易度</div>
             <div className="mt-1 text-lg font-medium text-neutral-950">
@@ -180,6 +185,12 @@ export default async function QualificationPage({ params, searchParams }: Props)
             <div className="text-[11px] text-neutral-500">受験料</div>
             <div className="mt-1 text-lg font-medium text-neutral-950">
               {q.exam_fee_tax_included?.toLocaleString() ?? "-"}円
+            </div>
+          </div>
+          <div className="rounded-lg border border-neutral-200/70 p-4">
+            <div className="text-[11px] text-neutral-500">平均年収</div>
+            <div className="mt-1 text-lg font-medium text-neutral-950">
+              {formatSalaryRange(q.average_salary_min, q.average_salary_max)}
             </div>
           </div>
         </section>
@@ -227,11 +238,20 @@ export default async function QualificationPage({ params, searchParams }: Props)
                   </th>
                   <td className="px-4 py-3 text-neutral-900">{q.eligibility_text}</td>
                 </tr>
-                <tr>
+                <tr className="border-b border-neutral-200/70">
                   <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
                     試験形式
                   </th>
                   <td className="px-4 py-3 text-neutral-900">{q.exam_format_text}</td>
+                </tr>
+                <tr>
+                  <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
+                    平均年収
+                  </th>
+                  <td className="px-4 py-3 text-neutral-900">
+                    {formatSalaryRange(q.average_salary_min, q.average_salary_max)}
+                    {q.average_salary_note ? `（${q.average_salary_note}）` : ""}
+                  </td>
                 </tr>
               </tbody>
             </table>

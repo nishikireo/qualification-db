@@ -25,6 +25,9 @@ export type Qualification = {
   source_pass_rate_url?: string
   source_fee_url?: string
   source_eligibility_url?: string
+  average_salary_min: number | null
+  average_salary_max: number | null
+  average_salary_note?: string
   last_verified_at: string
   publish_flag: boolean
 }
