@@ -5,7 +5,7 @@ import ReactMarkdown from "react-markdown"
 import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd"
 import { getStaticPages } from "@/lib/data"
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://example.com"
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://open-shikaku.jp"
 
 type Props = {
   params: Promise<{ slug?: string[] }>
