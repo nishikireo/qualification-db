@@ -3,7 +3,7 @@ import { notFound } from "next/navigation"
 import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd"
 import { getQualifications, getRelations } from "@/lib/data"
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://openshikaku.jp"
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://open-shikaku.jp"
 
 type Props = {
   params: Promise<{ slug: string }>
