@@ -2,6 +2,7 @@ import fs from "node:fs/promises"
 import path from "node:path"
 import { cache } from "react"
 import type {
+  DifficultyBenchmark,
   Qualification,
   QualificationRelation,
   QualificationMetric,
@@ -19,6 +20,7 @@ type SiteDataFile = {
   qualification_metrics: RawRow[]
   qualification_past_links: RawRow[]
   qualification_quiz_items: RawRow[]
+  difficulty_benchmark_master: RawRow[]
   site_pages: RawRow[]
   settings: RawRow[]
 }
@@ -51,25 +53,45 @@ export const getQualifications = cache(async (): Promise<Qualification[]> => {
       qualification_type: r.qualification_type,
       issuing_body: r.issuing_body,
       official_site_url: r.official_site_url,
+      official_exam_guide_url: r.official_exam_guide_url,
+      status: r.status,
+
       exam_frequency_text: r.exam_frequency_text,
+      exam_months_text: r.exam_months_text,
       eligibility_text: r.eligibility_text,
       exam_format_text: r.exam_format_text,
+
       pass_rate_latest: toNum(r.pass_rate_latest),
       study_hours_min: toNum(r.study_hours_min),
       study_hours_max: toNum(r.study_hours_max),
       exam_fee_tax_included: toNum(r.exam_fee_tax_included),
+
       average_salary_min: toNum(r.average_salary_min),
       average_salary_max: toNum(r.average_salary_max),
       average_salary_note: r.average_salary_note,
+      source_average_salary_url: r.source_average_salary_url,
+
+      renewal_required: toBool(r.renewal_required),
+      renewal_text: r.renewal_text,
+
       exclusive_work_flag: toBool(r.exclusive_work_flag),
+      exclusive_work_text: r.exclusive_work_text,
+
       difficulty_score: toNum(r.difficulty_score),
+      difficulty_deviation: toNum(r.difficulty_deviation),
       self_study_score: toNum(r.self_study_score),
       cost_performance_score: toNum(r.cost_performance_score),
       career_value_score: toNum(r.career_value_score),
+      job_relevance_score: toNum(r.job_relevance_score),
+      salary_up_potential_score: toNum(r.salary_up_potential_score),
+      brand_recognition_score: toNum(r.brand_recognition_score),
+      practicality_score: toNum(r.practicality_score),
+
       summary_short: r.summary_short,
       difficulty_reason_text: r.difficulty_reason_text,
       who_should_take: r.who_should_take,
       who_should_not_take: r.who_should_not_take,
+
       source_pass_rate_url: r.source_pass_rate_url,
       source_fee_url: r.source_fee_url,
       source_eligibility_url: r.source_eligibility_url,
@@ -103,10 +125,17 @@ export const getRelations = cache(async (): Promise<QualificationRelation[]> => 
 
 export const getComparedQualifications = cache(
   async (slug: string): Promise<Qualification[]> => {
-    const [items, relations] = await Promise.all([getQualifications(), getRelations()])
+    const [items, relations] = await Promise.all([
+      getQualifications(),
+      getRelations(),
+    ])
 
     const related = relations
-      .filter((r) => r.qualification_slug === slug && r.relation_type === "compared_with")
+      .filter(
+        (r) =>
+          r.qualification_slug === slug &&
+          r.relation_type === "compared_with"
+      )
       .sort((a, b) => b.relation_weight - a.relation_weight)
 
     return related
@@ -227,5 +256,43 @@ export const getQualificationQuizItemsBySlug = cache(
     return items
       .filter((item) => item.qualification_slug === slug)
       .sort((a, b) => (a.display_order ?? 9999) - (b.display_order ?? 9999))
+  }
+)
+
+export const getDifficultyBenchmarks = cache(
+  async (): Promise<DifficultyBenchmark[]> => {
+    const data = await getSiteData()
+
+    return data.difficulty_benchmark_master
+      .map((r) => ({
+        min_deviation: toNum(r.min_deviation),
+        max_deviation: toNum(r.max_deviation),
+        band_label: r.band_label,
+        band_order: toNum(r.band_order),
+        university_group: r.university_group,
+        university_examples: r.university_examples,
+        note: r.note,
+        publish_flag: toBool(r.publish_flag),
+      }))
+      .filter((item) => item.publish_flag)
+      .sort((a, b) => (b.min_deviation ?? 0) - (a.min_deviation ?? 0))
+  }
+)
+
+export const getDifficultyBenchmarkByDeviation = cache(
+  async (
+    deviation: number | null | undefined
+  ): Promise<DifficultyBenchmark | null> => {
+    if (deviation === null || deviation === undefined) return null
+
+    const items = await getDifficultyBenchmarks()
+
+    return (
+      items.find((item) => {
+        const min = item.min_deviation ?? -Infinity
+        const max = item.max_deviation ?? Infinity
+        return deviation >= min && deviation <= max
+      }) ?? null
+    )
   }
 )

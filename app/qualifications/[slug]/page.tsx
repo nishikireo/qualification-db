@@ -3,11 +3,12 @@ import { notFound } from "next/navigation"
 import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd"
 import {
   getComparedQualifications,
+  getDifficultyBenchmarkByDeviation,
   getQualificationBySlug,
-  getQualifications,
   getQualificationMetricsBySlug,
   getQualificationPastLinksBySlug,
   getQualificationQuizItemsBySlug,
+  getQualifications,
 } from "@/lib/data"
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://open-shikaku.jp"
@@ -95,8 +96,8 @@ export async function generateMetadata({ params }: Props) {
   if (!q) return {}
 
   return {
-    title: `${q.name_short}の難易度・合格率・勉強時間・受験料 | オープン資格`,
-    description: `${q.name_short}の難易度、合格率、勉強時間、受験料、独学しやすさ、転職価値をデータで整理しています。`,
+    title: `${q.name_short}の難易度・偏差値・合格率・勉強時間 | オープン資格`,
+    description: `${q.name_short}の難易度偏差値、合格率、勉強時間、受験料、平均年収、独学しやすさ、転職価値をデータで整理しています。`,
   }
 }
 
@@ -106,13 +107,15 @@ export default async function QualificationPage({ params, searchParams }: Props)
   const q = await getQualificationBySlug(slug)
   if (!q) notFound()
 
-  const [compared, metrics, pastLinks, quizItems, allQualifications] = await Promise.all([
-    getComparedQualifications(slug),
-    getQualificationMetricsBySlug(slug),
-    getQualificationPastLinksBySlug(slug),
-    getQualificationQuizItemsBySlug(slug),
-    getQualifications(),
-  ])
+  const [compared, metrics, pastLinks, quizItems, allQualifications, benchmark] =
+    await Promise.all([
+      getComparedQualifications(slug),
+      getQualificationMetricsBySlug(slug),
+      getQualificationPastLinksBySlug(slug),
+      getQualificationQuizItemsBySlug(slug),
+      getQualifications(),
+      getDifficultyBenchmarkByDeviation(q.difficulty_deviation),
+    ])
 
   const sameCategoryQualifications = allQualifications
     .filter(
@@ -155,7 +158,7 @@ export default async function QualificationPage({ params, searchParams }: Props)
         <header className="border-b border-neutral-200/70 pb-8">
           <div className="text-sm text-neutral-500">{q.category_primary}</div>
           <h1 className="mt-2 text-4xl font-semibold tracking-tight text-neutral-950">
-            {q.name_short}の難易度・合格率・勉強時間・受験料まとめ
+            {q.name_short}の難易度・偏差値・合格率・勉強時間まとめ
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-7 text-neutral-600">
             {q.summary_short}
@@ -164,29 +167,38 @@ export default async function QualificationPage({ params, searchParams }: Props)
 
         <section className="grid grid-cols-2 gap-3 py-8 md:grid-cols-5">
           <div className="rounded-lg border border-neutral-200/70 p-4">
-            <div className="text-[11px] text-neutral-500">難易度</div>
+            <div className="text-[11px] text-neutral-500">難易度偏差値</div>
             <div className="mt-1 text-lg font-medium text-neutral-950">
-              {q.difficulty_score ?? "-"} / 100
+              {q.difficulty_deviation ?? "-"}
             </div>
+            {benchmark?.band_label && (
+              <div className="mt-1 text-xs text-neutral-500">
+                {benchmark.band_label}
+              </div>
+            )}
           </div>
+
           <div className="rounded-lg border border-neutral-200/70 p-4">
             <div className="text-[11px] text-neutral-500">合格率</div>
             <div className="mt-1 text-lg font-medium text-neutral-950">
               {q.pass_rate_latest ?? "-"}%
             </div>
           </div>
+
           <div className="rounded-lg border border-neutral-200/70 p-4">
             <div className="text-[11px] text-neutral-500">勉強時間</div>
             <div className="mt-1 text-lg font-medium text-neutral-950">
               {q.study_hours_min ?? "-"}〜{q.study_hours_max ?? "-"}
             </div>
           </div>
+
           <div className="rounded-lg border border-neutral-200/70 p-4">
             <div className="text-[11px] text-neutral-500">受験料</div>
             <div className="mt-1 text-lg font-medium text-neutral-950">
               {q.exam_fee_tax_included?.toLocaleString() ?? "-"}円
             </div>
           </div>
+
           <div className="rounded-lg border border-neutral-200/70 p-4">
             <div className="text-[11px] text-neutral-500">平均年収</div>
             <div className="mt-1 text-lg font-medium text-neutral-950">
@@ -194,6 +206,52 @@ export default async function QualificationPage({ params, searchParams }: Props)
             </div>
           </div>
         </section>
+
+        {benchmark && (
+          <section className="border-t border-neutral-200/70 py-8">
+            <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
+              {q.name_short}の難易度偏差値
+            </h2>
+
+            <div className="rounded-lg border border-neutral-200/70 p-5">
+              <div className="grid gap-4 md:grid-cols-3">
+                <div>
+                  <div className="text-[11px] text-neutral-500">資格難易度偏差値</div>
+                  <div className="mt-1 text-2xl font-semibold text-neutral-950">
+                    {q.difficulty_deviation ?? "-"}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[11px] text-neutral-500">難易度帯</div>
+                  <div className="mt-1 text-base font-medium text-neutral-950">
+                    {benchmark.band_label}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[11px] text-neutral-500">大学群の目安</div>
+                  <div className="mt-1 text-base font-medium text-neutral-950">
+                    {benchmark.university_group}
+                  </div>
+                </div>
+              </div>
+
+              {benchmark.university_examples && (
+                <div className="mt-5 border-t border-neutral-200/70 pt-4">
+                  <div className="text-[11px] text-neutral-500">大学名例</div>
+                  <p className="mt-1 text-sm leading-7 text-neutral-700">
+                    {benchmark.university_examples}
+                  </p>
+                </div>
+              )}
+
+              {benchmark.note && (
+                <p className="mt-4 text-xs leading-6 text-neutral-500">
+                  {benchmark.note}
+                </p>
+              )}
+            </div>
+          </section>
+        )}
 
         <section className="border-t border-neutral-200/70 py-8">
           <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
@@ -208,42 +266,79 @@ export default async function QualificationPage({ params, searchParams }: Props)
                   </th>
                   <td className="px-4 py-3 text-neutral-900">{q.name_ja}</td>
                 </tr>
+
                 <tr className="border-b border-neutral-200/70">
                   <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
                     カテゴリ
                   </th>
                   <td className="px-4 py-3 text-neutral-900">{q.category_primary}</td>
                 </tr>
+
                 <tr className="border-b border-neutral-200/70">
                   <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
                     種別
                   </th>
                   <td className="px-4 py-3 text-neutral-900">{q.qualification_type}</td>
                 </tr>
+
                 <tr className="border-b border-neutral-200/70">
                   <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
                     主催
                   </th>
                   <td className="px-4 py-3 text-neutral-900">{q.issuing_body}</td>
                 </tr>
+
                 <tr className="border-b border-neutral-200/70">
                   <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
                     試験回数
                   </th>
                   <td className="px-4 py-3 text-neutral-900">{q.exam_frequency_text}</td>
                 </tr>
+
                 <tr className="border-b border-neutral-200/70">
                   <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
                     受験資格
                   </th>
                   <td className="px-4 py-3 text-neutral-900">{q.eligibility_text}</td>
                 </tr>
+
                 <tr className="border-b border-neutral-200/70">
                   <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
                     試験形式
                   </th>
                   <td className="px-4 py-3 text-neutral-900">{q.exam_format_text}</td>
                 </tr>
+
+                <tr className="border-b border-neutral-200/70">
+                  <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
+                    難易度偏差値
+                  </th>
+                  <td className="px-4 py-3 text-neutral-900">
+                    {q.difficulty_deviation ?? "-"}
+                  </td>
+                </tr>
+
+                <tr className="border-b border-neutral-200/70">
+                  <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
+                    難易度帯
+                  </th>
+                  <td className="px-4 py-3 text-neutral-900">
+                    {benchmark?.band_label ?? "-"}
+                  </td>
+                </tr>
+
+                <tr className="border-b border-neutral-200/70">
+                  <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
+                    大学群の目安
+                  </th>
+                  <td className="px-4 py-3 text-neutral-900">
+                    {benchmark?.university_group ?? "-"}
+                    {benchmark?.university_examples
+                      ? `（${benchmark.university_examples}）`
+                      : ""}
+                  </td>
+                </tr>
+
                 <tr>
                   <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
                     平均年収
@@ -406,7 +501,8 @@ export default async function QualificationPage({ params, searchParams }: Props)
                     {isAnswered && (
                       <div className="mt-5 border-t border-neutral-200/70 pt-4 text-sm">
                         <p className={isCorrect ? "text-green-700" : "text-red-700"}>
-                          <span className="font-medium">判定:</span> {isCorrect ? "正解" : "不正解"}
+                          <span className="font-medium">判定:</span>{" "}
+                          {isCorrect ? "正解" : "不正解"}
                         </p>
                         <p className="mt-2 text-neutral-900">
                           <span className="font-medium">正解:</span> {quiz.answer_value}

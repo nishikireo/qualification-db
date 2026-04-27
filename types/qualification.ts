@@ -15,6 +15,7 @@ export type Qualification = {
   exam_fee_tax_included: number | null
   exclusive_work_flag: boolean
   difficulty_score: number | null
+  difficulty_deviation: number | null
   self_study_score: number | null
   cost_performance_score: number | null
   career_value_score: number | null
@@ -88,5 +89,16 @@ export type QualificationQuizItem = {
   answer_value: string
   explanation: string
   display_order: number | null
+  publish_flag: boolean
+}
+
+export type DifficultyBenchmark = {
+  min_deviation: number | null
+  max_deviation: number | null
+  band_label: string
+  band_order: number | null
+  university_group: string
+  university_examples: string
+  note: string
   publish_flag: boolean
 }
