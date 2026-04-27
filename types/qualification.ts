@@ -156,3 +156,12 @@ export type QualificationComparison = {
 
   publish_flag: boolean
 }
+
+export type ListPage = {
+  slug: string
+  title: string
+  description: string
+  primary_metric: string
+  secondary_filter: string
+  publish_recommendation: boolean
+}

@@ -42,6 +42,7 @@ async function main() {
       "qualification_quiz_items!A:ZZ",
       "difficulty_benchmark_master!A:ZZ",
       "qualification_comparisons!A:ZZ",
+      "list_pages!A:ZZ",
       "site_pages!A:ZZ",
       "settings!A:ZZ",
     ],
@@ -62,6 +63,7 @@ async function main() {
     qualification_quiz_items: rowsToObjects(getRangeValues("qualification_quiz_items")),
     difficulty_benchmark_master: rowsToObjects(getRangeValues("difficulty_benchmark_master")),
     qualification_comparisons: rowsToObjects(getRangeValues("qualification_comparisons")),
+    list_pages: rowsToObjects(getRangeValues("list_pages")),
     site_pages: rowsToObjects(getRangeValues("site_pages")),
     settings: rowsToObjects(getRangeValues("settings")),
   }
