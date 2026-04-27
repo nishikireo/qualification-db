@@ -138,6 +138,7 @@ function PassRateLineChart({ points }: { points: ChartPoint[] }) {
   const minRate = Math.max(0, Math.floor(Math.min(...rates) / 5) * 5)
   const maxRate = Math.ceil(Math.max(...rates) / 5) * 5 || 100
   const range = maxRate - minRate || 1
+  const mobilePoints = validPoints.slice(-6).reverse()
 
   const getX = (index: number) => {
     if (validPoints.length === 1) return width / 2
@@ -162,82 +163,113 @@ function PassRateLineChart({ points }: { points: ChartPoint[] }) {
   const yTicks = [minRate, Math.round((minRate + maxRate) / 2), maxRate]
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-neutral-200/70 p-4">
-      <div className="min-w-[680px]">
-        <svg
-          viewBox={`0 0 ${width} ${height}`}
-          role="img"
-          aria-label="合格率推移グラフ"
-          className="h-auto w-full"
-        >
-          {yTicks.map((tick) => {
-            const y = getY(tick)
+    <>
+      <div className="md:hidden rounded-lg border border-neutral-200/70 p-4">
+        <div className="space-y-3">
+          {mobilePoints.map((point, index) => {
+            const rate = point.passRate ?? 0
+            const widthPercent = Math.max(4, Math.min(100, rate))
 
             return (
-              <g key={tick}>
-                <line
-                  x1={paddingX}
-                  y1={y}
-                  x2={width - paddingX}
-                  y2={y}
-                  stroke="#e5e5e5"
-                  strokeWidth="1"
-                />
-                <text
-                  x={paddingX - 10}
-                  y={y + 4}
-                  textAnchor="end"
-                  className="fill-neutral-500 text-[11px]"
-                >
-                  {tick}%
-                </text>
-              </g>
+              <div key={`${point.label}-mobile-pass-rate-${index}`}>
+                <div className="mb-1 flex items-center justify-between gap-3 text-xs">
+                  <span className="truncate text-neutral-600">{point.label}</span>
+                  <span className="font-semibold text-neutral-950">{rate}%</span>
+                </div>
+                <div className="h-2.5 overflow-hidden rounded-full bg-neutral-100">
+                  <div
+                    className="h-full rounded-full bg-neutral-950"
+                    style={{ width: `${widthPercent}%` }}
+                  />
+                </div>
+              </div>
             )
           })}
-
-          <polyline
-            points={polylinePoints}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            className="text-neutral-950"
-          />
-
-          {validPoints.map((point, index) => {
-            const x = getX(index)
-            const y = getY(point.passRate ?? 0)
-
-            return (
-              <g key={`${point.label}-${index}`}>
-                <circle
-                  cx={x}
-                  cy={y}
-                  r="4"
-                  className="fill-white stroke-neutral-950"
-                  strokeWidth="2"
-                />
-                <text
-                  x={x}
-                  y={y - 10}
-                  textAnchor="middle"
-                  className="fill-neutral-700 text-[11px]"
-                >
-                  {point.passRate}%
-                </text>
-                <text
-                  x={x}
-                  y={height - 10}
-                  textAnchor="middle"
-                  className="fill-neutral-500 text-[10px]"
-                >
-                  {point.year}
-                </text>
-              </g>
-            )
-          })}
-        </svg>
+        </div>
+        {validPoints.length > mobilePoints.length && (
+          <p className="mt-3 text-xs leading-5 text-neutral-500">
+            スマホでは直近{mobilePoints.length}件を表示しています。全期間の傾向はPC表示の折れ線グラフで確認できます。
+          </p>
+        )}
       </div>
-    </div>
+
+      <div className="hidden overflow-x-auto rounded-lg border border-neutral-200/70 p-4 md:block">
+        <div className="min-w-[680px]">
+          <svg
+            viewBox={`0 0 ${width} ${height}`}
+            role="img"
+            aria-label="合格率推移グラフ"
+            className="h-auto w-full"
+          >
+            {yTicks.map((tick) => {
+              const y = getY(tick)
+
+              return (
+                <g key={tick}>
+                  <line
+                    x1={paddingX}
+                    y1={y}
+                    x2={width - paddingX}
+                    y2={y}
+                    stroke="#e5e5e5"
+                    strokeWidth="1"
+                  />
+                  <text
+                    x={paddingX - 10}
+                    y={y + 4}
+                    textAnchor="end"
+                    className="fill-neutral-500 text-[11px]"
+                  >
+                    {tick}%
+                  </text>
+                </g>
+              )
+            })}
+
+            <polyline
+              points={polylinePoints}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              className="text-neutral-950"
+            />
+
+            {validPoints.map((point, index) => {
+              const x = getX(index)
+              const y = getY(point.passRate ?? 0)
+
+              return (
+                <g key={`${point.label}-${index}`}>
+                  <circle
+                    cx={x}
+                    cy={y}
+                    r="4"
+                    className="fill-white stroke-neutral-950"
+                    strokeWidth="2"
+                  />
+                  <text
+                    x={x}
+                    y={y - 10}
+                    textAnchor="middle"
+                    className="fill-neutral-700 text-[11px]"
+                  >
+                    {point.passRate}%
+                  </text>
+                  <text
+                    x={x}
+                    y={height - 10}
+                    textAnchor="middle"
+                    className="fill-neutral-500 text-[10px]"
+                  >
+                    {point.year}
+                  </text>
+                </g>
+              )
+            })}
+          </svg>
+        </div>
+      </div>
+    </>
   )
 }
 
@@ -259,6 +291,7 @@ function ExamineesBarChart({ points }: { points: ChartPoint[] }) {
   const maxValue = Math.max(
     ...validPoints.map((point) => point.examineesCount ?? 0)
   )
+  const mobilePoints = validPoints.slice(-6).reverse()
 
   const barAreaWidth = width - paddingX * 2
   const barWidth = Math.max(18, Math.min(42, barAreaWidth / validPoints.length - 12))
@@ -274,61 +307,94 @@ function ExamineesBarChart({ points }: { points: ChartPoint[] }) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-neutral-200/70 p-4">
-      <div className="min-w-[680px]">
-        <svg
-          viewBox={`0 0 ${width} ${height}`}
-          role="img"
-          aria-label="受験者数推移グラフ"
-          className="h-auto w-full"
-        >
-          <line
-            x1={paddingX}
-            y1={height - paddingY}
-            x2={width - paddingX}
-            y2={height - paddingY}
-            stroke="#e5e5e5"
-            strokeWidth="1"
-          />
-
-          {validPoints.map((point, index) => {
+    <>
+      <div className="md:hidden rounded-lg border border-neutral-200/70 p-4">
+        <div className="space-y-3">
+          {mobilePoints.map((point, index) => {
             const value = point.examineesCount ?? 0
-            const barHeight = getBarHeight(value)
-            const x = getX(index)
-            const y = height - paddingY - barHeight
+            const widthPercent = maxValue
+              ? Math.max(4, Math.round((value / maxValue) * 100))
+              : 4
 
             return (
-              <g key={`${point.label}-${index}`}>
-                <rect
-                  x={x}
-                  y={y}
-                  width={barWidth}
-                  height={barHeight}
-                  rx="2"
-                  className="fill-neutral-900"
-                />
-                <text
-                  x={x + barWidth / 2}
-                  y={Math.max(14, y - 8)}
-                  textAnchor="middle"
-                  className="fill-neutral-600 text-[10px]"
-                >
-                  {formatNumber(value)}
-                </text>
-                <text
-                  x={x + barWidth / 2}
-                  y={height - 10}
-                  textAnchor="middle"
-                  className="fill-neutral-500 text-[10px]"
-                >
-                  {point.year}
-                </text>
-              </g>
+              <div key={`${point.label}-mobile-examinees-${index}`}>
+                <div className="mb-1 flex items-center justify-between gap-3 text-xs">
+                  <span className="truncate text-neutral-600">{point.label}</span>
+                  <span className="font-semibold text-neutral-950">{formatNumber(value)}人</span>
+                </div>
+                <div className="h-2.5 overflow-hidden rounded-full bg-neutral-100">
+                  <div
+                    className="h-full rounded-full bg-neutral-950"
+                    style={{ width: `${widthPercent}%` }}
+                  />
+                </div>
+              </div>
             )
           })}
-        </svg>
+        </div>
+        {validPoints.length > mobilePoints.length && (
+          <p className="mt-3 text-xs leading-5 text-neutral-500">
+            スマホでは直近{mobilePoints.length}件を表示しています。全期間の推移はPC表示の棒グラフで確認できます。
+          </p>
+        )}
       </div>
-    </div>
+
+      <div className="hidden overflow-x-auto rounded-lg border border-neutral-200/70 p-4 md:block">
+        <div className="min-w-[680px]">
+          <svg
+            viewBox={`0 0 ${width} ${height}`}
+            role="img"
+            aria-label="受験者数推移グラフ"
+            className="h-auto w-full"
+          >
+            <line
+              x1={paddingX}
+              y1={height - paddingY}
+              x2={width - paddingX}
+              y2={height - paddingY}
+              stroke="#e5e5e5"
+              strokeWidth="1"
+            />
+
+            {validPoints.map((point, index) => {
+              const value = point.examineesCount ?? 0
+              const barHeight = getBarHeight(value)
+              const x = getX(index)
+              const y = height - paddingY - barHeight
+
+              return (
+                <g key={`${point.label}-${index}`}>
+                  <rect
+                    x={x}
+                    y={y}
+                    width={barWidth}
+                    height={barHeight}
+                    rx="2"
+                    className="fill-neutral-900"
+                  />
+                  <text
+                    x={x + barWidth / 2}
+                    y={Math.max(14, y - 8)}
+                    textAnchor="middle"
+                    className="fill-neutral-600 text-[10px]"
+                  >
+                    {formatNumber(value)}
+                  </text>
+                  <text
+                    x={x + barWidth / 2}
+                    y={height - 10}
+                    textAnchor="middle"
+                    className="fill-neutral-500 text-[10px]"
+                  >
+                    {point.year}
+                  </text>
+                </g>
+              )
+            })}
+          </svg>
+        </div>
+      </div>
+    </>
   )
 }
 
@@ -359,6 +425,8 @@ export default function QualificationMetricsSection({ metrics }: Props) {
       if (yearA !== yearB) return yearB - yearA
       return getMetricLabel(a).localeCompare(getMetricLabel(b), "ja")
     })
+  const visibleMobileMetrics = sortedMetrics.slice(0, 5)
+  const hiddenMobileMetrics = sortedMetrics.slice(5)
 
   return (
     <section className="border-t border-neutral-200/70 py-8">
@@ -539,7 +607,7 @@ export default function QualificationMetricsSection({ metrics }: Props) {
         </div>
 
         <div className="grid gap-3 md:hidden">
-          {sortedMetrics.map((metric, index) => (
+          {visibleMobileMetrics.map((metric, index) => (
             <article
               key={`${metric.metric_year}-${metric.metric_period_label}-${metric.metric_subject}-${index}`}
               className="rounded-lg border border-neutral-200/70 p-4"
@@ -630,6 +698,95 @@ export default function QualificationMetricsSection({ metrics }: Props) {
               </details>
             </article>
           ))}
+          {hiddenMobileMetrics.length > 0 && (
+            <details className="rounded-lg border border-neutral-200/70 p-4">
+              <summary className="cursor-pointer text-sm font-medium text-neutral-700">
+                過去データをすべて見る（{hiddenMobileMetrics.length}件）
+              </summary>
+
+              <div className="mt-4 grid gap-3">
+                {hiddenMobileMetrics.map((metric, index) => (
+                  <article
+                    key={`${metric.metric_year}-${metric.metric_period_label}-${metric.metric_subject}-hidden-${index}`}
+                    className="rounded-lg border border-neutral-200/70 p-4"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-xs text-neutral-500">
+                          {metric.metric_year ?? "-"}
+                        </div>
+                        <h4 className="mt-1 text-sm font-semibold leading-6 text-neutral-950">
+                          {metric.metric_period_label || "年度別データ"}
+                        </h4>
+                      </div>
+
+                      <div className="text-right">
+                        <div className="text-[11px] text-neutral-500">合格率</div>
+                        <div className="text-2xl font-semibold text-neutral-950">
+                          {formatPercent(metric.pass_rate)}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
+                      <div className="rounded-md bg-neutral-50 p-3">
+                        <div className="text-[11px] text-neutral-500">受験者数</div>
+                        <div className="mt-1 font-semibold text-neutral-950">
+                          {formatNumber(metric.examinees_count)}
+                        </div>
+                      </div>
+
+                      <div className="rounded-md bg-neutral-50 p-3">
+                        <div className="text-[11px] text-neutral-500">合格者数</div>
+                        <div className="mt-1 font-semibold text-neutral-950">
+                          {formatNumber(metric.passers_count)}
+                        </div>
+                      </div>
+                    </div>
+
+                    <details className="mt-3 rounded-md bg-neutral-50 p-3">
+                      <summary className="cursor-pointer text-sm text-neutral-600">
+                        詳細を見る
+                      </summary>
+
+                      <div className="mt-3 space-y-2 text-xs leading-6 text-neutral-600">
+                        <div>申込者数: {formatNumber(metric.applicants_count)}</div>
+                        <div>受験料: {formatYen(metric.exam_fee_tax_included)}</div>
+                        <div>試験方式: {examTypeLabel(metric.metric_exam_type)}</div>
+                        <div>科目: {subjectLabel(metric.metric_subject)}</div>
+                        <div>確認日: {metric.checked_at || "-"}</div>
+                        {metric.notes && <div>備考: {metric.notes}</div>}
+
+                        <div className="flex flex-wrap gap-3 pt-1">
+                          {metric.source_result_url && (
+                            <a
+                              href={metric.source_result_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="underline hover:text-neutral-950"
+                            >
+                              試験結果
+                            </a>
+                          )}
+
+                          {metric.source_fee_url && (
+                            <a
+                              href={metric.source_fee_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="underline hover:text-neutral-950"
+                            >
+                              受験料
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </details>
+                  </article>
+                ))}
+              </div>
+            </details>
+          )}
         </div>
       </div>
     </section>
