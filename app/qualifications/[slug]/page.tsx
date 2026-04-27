@@ -10,18 +10,17 @@ import {
   getQualificationQuizItemsBySlug,
   getQualifications,
 } from "@/lib/data"
+import QualificationMetricsSection from "@/components/QualificationMetricsSection"
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://open-shikaku.jp"
 
 type Props = {
   params: Promise<{ slug: string }>
-  searchParams: Promise<Record<string, string | string[] | undefined>>
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
-function formatNumber(value: number | null | undefined) {
-  if (value === null || value === undefined) return "-"
-  return value.toLocaleString()
-}
+type SearchParamsRecord = Record<string, string | string[] | undefined>
+
 
 function formatSalaryRange(min: number | null | undefined, max: number | null | undefined) {
   if (min === null || min === undefined || max === null || max === undefined) return "-"
@@ -36,31 +35,55 @@ function splitLines(text: string | undefined) {
     .filter(Boolean)
 }
 
-function subjectLabel(subject: string) {
-  const map: Record<string, string> = {
-    overall: "総合",
-    theory: "学科",
-    practical: "実技",
-  }
-
-  return map[subject] ?? subject
-}
-
-function examTypeLabel(examType: string) {
-  const map: Record<string, string> = {
-    paper: "紙試験",
-    cbt: "CBT",
-    unified: "統一試験",
-  }
-
-  return map[examType] ?? examType
-}
 
 function getSearchParamValue(
   value: string | string[] | undefined
 ): string | undefined {
   if (Array.isArray(value)) return value[0]
   return value
+}
+
+function getSameCategoryQualifications<T extends {
+  slug: string
+  category_primary: string
+  career_value_score: number | null | undefined
+}>(items: T[], current: T) {
+  return items
+    .filter(
+      (item) =>
+        item.slug !== current.slug &&
+        item.category_primary === current.category_primary
+    )
+    .sort((a, b) => (b.career_value_score ?? 0) - (a.career_value_score ?? 0))
+    .slice(0, 8)
+}
+
+function getOtherQualificationSlug(
+  comparison: { left_slug: string; right_slug: string },
+  currentSlug: string
+) {
+  return comparison.left_slug === currentSlug
+    ? comparison.right_slug
+    : comparison.left_slug
+}
+
+function createQuizAnswerHref(
+  slug: string,
+  params: SearchParamsRecord,
+  answerKey: string,
+  answerValue: string,
+  quizIndex: number
+) {
+  const nextParams = new URLSearchParams()
+
+  Object.entries(params).forEach(([key, value]) => {
+    const normalized = getSearchParamValue(value)
+    if (normalized) nextParams.set(key, normalized)
+  })
+
+  nextParams.set(answerKey, answerValue)
+
+  return `/qualifications/${slug}?${nextParams.toString()}#quiz-${quizIndex + 1}`
 }
 
 function getQuizChoiceEntries(quiz: {
@@ -103,7 +126,7 @@ export async function generateMetadata({ params }: Props) {
 
 export default async function QualificationPage({ params, searchParams }: Props) {
   const { slug } = await params
-  const resolvedSearchParams = await searchParams
+  const resolvedSearchParams = (await searchParams) ?? {}
   const q = await getQualificationBySlug(slug)
   if (!q) notFound()
     
@@ -123,14 +146,10 @@ export default async function QualificationPage({ params, searchParams }: Props)
     getDifficultyBenchmarkByDeviation(q.difficulty_deviation),
   ])
 
-  const sameCategoryQualifications = allQualifications
-    .filter(
-      (item) =>
-        item.slug !== q.slug &&
-        item.category_primary === q.category_primary
-    )
-    .sort((a, b) => (b.career_value_score ?? 0) - (a.career_value_score ?? 0))
-    .slice(0, 8)
+  const sameCategoryQualifications = getSameCategoryQualifications(
+    allQualifications,
+    q
+  )
 
   return (
     <main className="bg-white">
@@ -359,69 +378,7 @@ export default async function QualificationPage({ params, searchParams }: Props)
           </div>
         </section>
 
-        {metrics.length > 0 && (
-          <section className="border-t border-neutral-200/70 py-8">
-            <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
-              年度別データ
-            </h2>
-            <div className="overflow-x-auto rounded-lg border border-neutral-200/70">
-              <table className="w-full min-w-[920px] border-collapse text-sm">
-                <thead>
-                  <tr className="border-b border-neutral-200/70 bg-neutral-50">
-                    <th className="px-4 py-3 text-left font-medium text-neutral-600">年度</th>
-                    <th className="px-4 py-3 text-left font-medium text-neutral-600">期間</th>
-                    <th className="px-4 py-3 text-left font-medium text-neutral-600">試験種別</th>
-                    <th className="px-4 py-3 text-left font-medium text-neutral-600">科目</th>
-                    <th className="px-4 py-3 text-left font-medium text-neutral-600">申込者数</th>
-                    <th className="px-4 py-3 text-left font-medium text-neutral-600">受験者数</th>
-                    <th className="px-4 py-3 text-left font-medium text-neutral-600">合格者数</th>
-                    <th className="px-4 py-3 text-left font-medium text-neutral-600">合格率</th>
-                    <th className="px-4 py-3 text-left font-medium text-neutral-600">受験料</th>
-                    <th className="px-4 py-3 text-left font-medium text-neutral-600">出典</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {metrics.map((m, index) => (
-                    <tr
-                      key={`${m.qualification_slug}-${m.metric_year}-${m.metric_period_label}-${m.metric_subject}-${index}`}
-                      className="border-b border-neutral-200/70 last:border-b-0"
-                    >
-                      <td className="px-4 py-3 text-neutral-900">{m.metric_year ?? "-"}</td>
-                      <td className="px-4 py-3 text-neutral-900">{m.metric_period_label || "-"}</td>
-                      <td className="px-4 py-3 text-neutral-900">{examTypeLabel(m.metric_exam_type)}</td>
-                      <td className="px-4 py-3 text-neutral-900">{subjectLabel(m.metric_subject)}</td>
-                      <td className="px-4 py-3 text-neutral-900">{formatNumber(m.applicants_count)}</td>
-                      <td className="px-4 py-3 text-neutral-900">{formatNumber(m.examinees_count)}</td>
-                      <td className="px-4 py-3 text-neutral-900">{formatNumber(m.passers_count)}</td>
-                      <td className="px-4 py-3 text-neutral-900">
-                        {m.pass_rate !== null && m.pass_rate !== undefined ? `${m.pass_rate}%` : "-"}
-                      </td>
-                      <td className="px-4 py-3 text-neutral-900">
-                        {m.exam_fee_tax_included !== null && m.exam_fee_tax_included !== undefined
-                          ? `${m.exam_fee_tax_included.toLocaleString()}円`
-                          : "-"}
-                      </td>
-                      <td className="px-4 py-3">
-                        {m.source_result_url ? (
-                          <a
-                            href={m.source_result_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-neutral-700 underline hover:text-neutral-950"
-                          >
-                            結果
-                          </a>
-                        ) : (
-                          "-"
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        )}
+        <QualificationMetricsSection metrics={metrics} />
 
         <section className="border-t border-neutral-200/70 py-8">
           <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
@@ -478,19 +435,19 @@ export default async function QualificationPage({ params, searchParams }: Props)
 
                     <div className="mt-4 flex flex-wrap gap-2">
                       {choices.map((choice) => {
-                        const nextParams = new URLSearchParams()
-                        Object.entries(resolvedSearchParams).forEach(([key, value]) => {
-                          const normalized = getSearchParamValue(value)
-                          if (normalized) nextParams.set(key, normalized)
-                        })
-                        nextParams.set(answerKey, choice.value)
-
                         const isSelected = selectedAnswer === choice.value
+                        const href = createQuizAnswerHref(
+                          q.slug,
+                          resolvedSearchParams,
+                          answerKey,
+                          choice.value,
+                          index
+                        )
 
                         return (
                           <Link
                             key={choice.value}
-                            href={`/qualifications/${q.slug}?${nextParams.toString()}#quiz-${index + 1}`}
+                            href={href}
                             scroll={false}
                             className={`rounded-md border px-3 py-2 text-sm transition ${
                               isSelected
@@ -558,10 +515,7 @@ export default async function QualificationPage({ params, searchParams }: Props)
 
             <div className="grid gap-3 md:grid-cols-2">
               {comparisons.map((comparison) => {
-                const otherSlug =
-                  comparison.left_slug === q.slug
-                    ? comparison.right_slug
-                    : comparison.left_slug
+                const otherSlug = getOtherQualificationSlug(comparison, q.slug)
 
                 const other = allQualifications.find((item) => item.slug === otherSlug)
 

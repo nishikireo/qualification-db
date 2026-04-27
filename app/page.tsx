@@ -8,10 +8,6 @@ export const metadata = {
     "資格の難易度、合格率、勉強時間、受験料、独学しやすさ、転職価値をデータで比較する。",
 }
 
-type Props = {
-  searchParams: Promise<Record<string, string | string[] | undefined>>
-}
-
 function scoreLabel(value: number | null | undefined) {
   if (value === null || value === undefined) return "-"
   return `${value} / 100`
@@ -32,47 +28,32 @@ function hoursLabel(min: number | null | undefined, max: number | null | undefin
   return `${min}〜${max}時間`
 }
 
-function getSearchParamValue(value: string | string[] | undefined) {
-  if (Array.isArray(value)) return value[0]
-  return value ?? ""
+function percentLabel(value: number | null | undefined) {
+  if (value === null || value === undefined) return "-"
+  return `${value}%`
 }
 
-export default async function HomePage({ searchParams }: Props) {
-  const qualifications = await getQualifications()
-  const resolvedSearchParams = await searchParams
-  const keyword = getSearchParamValue(resolvedSearchParams.q).trim()
-
-  const normalizedKeyword = keyword.toLowerCase()
-
-  const matchedQualifications = keyword
-    ? qualifications.filter((q) => {
-        const targets = [
-          q.name_short,
-          q.name_ja,
-          q.category_primary,
-          q.qualification_type,
-          q.summary_short,
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase()
-
-        return targets.includes(normalizedKeyword)
-      })
-    : qualifications
-
-  const featured = [...matchedQualifications]
+function getFeaturedQualifications<T extends { career_value_score: number | null | undefined }>(
+  qualifications: T[]
+) {
+  return [...qualifications]
     .sort((a, b) => (b.career_value_score ?? 0) - (a.career_value_score ?? 0))
     .slice(0, 12)
+}
 
-  const listLinks = [
-    { href: "/lists/difficulty", label: "難易度が高い資格一覧" },
-    { href: "/lists/self-study", label: "独学しやすい資格一覧" },
-    { href: "/lists/cost-performance", label: "コスパが高い資格一覧" },
-    { href: "/lists/no-eligibility", label: "受験資格なしの資格一覧" },
-    { href: "/lists/exclusive-work", label: "独占業務がある資格一覧" },
-    { href: "/lists/real-estate", label: "不動産資格一覧" },
-  ]
+const listLinks = [
+  { href: "/lists/difficulty", label: "難易度が高い資格一覧" },
+  { href: "/lists/self-study", label: "独学しやすい資格一覧" },
+  { href: "/lists/cost-performance", label: "コスパが高い資格一覧" },
+  { href: "/lists/no-eligibility", label: "受験資格なしの資格一覧" },
+  { href: "/lists/exclusive-work", label: "独占業務がある資格一覧" },
+  { href: "/lists/real-estate", label: "不動産資格一覧" },
+]
+
+export default async function HomePage() {
+  const qualifications = await getQualifications()
+
+  const featured = getFeaturedQualifications(qualifications)
 
   return (
     <main className="bg-white">
@@ -86,26 +67,8 @@ export default async function HomePage({ searchParams }: Props) {
               難易度、合格率、勉強時間、受験料、独学しやすさ、転職価値を整理して、
               比較しやすい形で公開します。
             </p>
-            
-            <HomeQualificationSearch />
-          </div>
 
-          <div className="mx-auto mt-10 max-w-2xl">
-            <form action="/" method="GET" className="flex flex-col gap-3 sm:flex-row">
-              <input
-                type="text"
-                name="q"
-                defaultValue={keyword}
-                placeholder="資格名で検索する　例: 宅建 / 簿記2級 / FP2級"
-                className="h-12 flex-1 rounded-lg border border-neutral-200/70 bg-white px-4 text-sm text-neutral-950 outline-none placeholder:text-neutral-400 focus:border-neutral-400"
-              />
-              <button
-                type="submit"
-                className="h-12 rounded-lg border border-neutral-900 bg-neutral-950 px-5 text-sm font-medium text-white hover:opacity-90"
-              >
-                検索
-              </button>
-            </form>
+            <HomeQualificationSearch />
           </div>
 
           <div className="mx-auto mt-8 flex max-w-4xl flex-wrap items-center justify-center gap-2">
@@ -126,29 +89,18 @@ export default async function HomePage({ searchParams }: Props) {
         <div className="mb-6 flex items-end justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold tracking-tight text-neutral-950">
-              {keyword ? `検索結果: ${featured.length}件` : "注目の資格"}
+              注目の資格
             </h2>
             <p className="mt-1 text-sm text-neutral-500">
-              {keyword
-                ? `「${keyword}」に一致する資格を表示しています。`
-                : "比較されやすく、検索需要の高い資格を表示しています。"}
+              比較されやすく、検索需要の高い資格を表示しています。
             </p>
           </div>
-          {keyword ? (
-            <Link
-              href="/"
-              className="text-sm text-neutral-600 hover:text-neutral-950"
-            >
-              検索をクリア
-            </Link>
-          ) : (
-            <Link
-              href="/lists/difficulty"
-              className="text-sm text-neutral-600 hover:text-neutral-950"
-            >
-              一覧を見る
-            </Link>
-          )}
+          <Link
+            href="/qualifications"
+            className="text-sm text-neutral-600 hover:text-neutral-950"
+          >
+            すべての資格を見る
+          </Link>
         </div>
 
         {featured.length > 0 ? (
@@ -182,9 +134,7 @@ export default async function HomePage({ searchParams }: Props) {
                   <div>
                     <div className="text-[11px] text-neutral-500">合格率</div>
                     <div className="mt-1 text-neutral-900">
-                      {q.pass_rate_latest !== null && q.pass_rate_latest !== undefined
-                        ? `${q.pass_rate_latest}%`
-                        : "-"}
+                      {percentLabel(q.pass_rate_latest)}
                     </div>
                   </div>
                   <div>
@@ -212,10 +162,7 @@ export default async function HomePage({ searchParams }: Props) {
         ) : (
           <div className="rounded-lg border border-neutral-200/70 p-8 text-center">
             <p className="text-sm text-neutral-700">
-              「{keyword}」に一致する資格は見つかりませんでした。
-            </p>
-            <p className="mt-2 text-sm text-neutral-500">
-              別の資格名やカテゴリ名で検索してみてください。
+              表示できる資格がまだありません。
             </p>
           </div>
         )}
