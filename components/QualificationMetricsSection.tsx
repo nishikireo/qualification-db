@@ -162,7 +162,7 @@ function PassRateLineChart({ points }: { points: ChartPoint[] }) {
   const yTicks = [minRate, Math.round((minRate + maxRate) / 2), maxRate]
 
   return (
-    <div className="w-full max-w-full overflow-x-auto rounded-lg border border-neutral-200/70 p-3 md:p-4">
+    <div className="w-full min-w-0 max-w-full overflow-x-auto rounded-lg border border-neutral-200/70 p-3 md:p-4">
       <div className="w-[680px] max-w-none shrink-0">
         <svg
           viewBox={`0 0 ${width} ${height}`}
@@ -274,7 +274,7 @@ function ExamineesBarChart({ points }: { points: ChartPoint[] }) {
   }
 
   return (
-    <div className="w-full max-w-full overflow-x-auto rounded-lg border border-neutral-200/70 p-3 md:p-4">
+    <div className="w-full min-w-0 max-w-full overflow-x-auto rounded-lg border border-neutral-200/70 p-3 md:p-4">
       <div className="w-[680px] max-w-none shrink-0">
         <svg
           viewBox={`0 0 ${width} ${height}`}
@@ -417,15 +417,15 @@ export default function QualificationMetricsSection({ metrics }: Props) {
         </div>
       </div>
 
-      <div className="mt-6 grid gap-5 lg:grid-cols-2">
-        <div>
+      <div className="mt-6 grid min-w-0 gap-5 lg:grid-cols-2">
+        <div className="min-w-0">
           <h3 className="mb-3 text-sm font-semibold text-neutral-950">
             合格率推移
           </h3>
           <PassRateLineChart points={chartPoints} />
         </div>
 
-        <div>
+        <div className="min-w-0">
           <h3 className="mb-3 text-sm font-semibold text-neutral-950">
             受験者数推移
           </h3>
