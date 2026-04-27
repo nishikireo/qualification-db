@@ -213,7 +213,7 @@ export default async function QualificationPage({ params, searchParams }: Props)
           <div className="rounded-lg border border-neutral-200/70 p-4">
             <div className="text-[11px] text-neutral-500">勉強時間</div>
             <div className="mt-1 text-lg font-medium text-neutral-950">
-              {q.study_hours_min ?? "-"}〜{q.study_hours_max ?? "-"}
+              {q.study_hours_min ?? "-"}〜{q.study_hours_max ?? "-"}時間
             </div>
           </div>
 
@@ -227,7 +227,7 @@ export default async function QualificationPage({ params, searchParams }: Props)
           <div className="rounded-lg border border-neutral-200/70 p-4">
             <div className="text-[11px] text-neutral-500">平均年収</div>
             <div className="mt-1 text-lg font-medium text-neutral-950">
-              {formatSalaryRange(q.average_salary_min, q.average_salary_max)}
+              {formatSalaryRange(q.average_salary_min, q.average_salary_max)}円
             </div>
           </div>
         </section>
