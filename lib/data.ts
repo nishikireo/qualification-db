@@ -260,7 +260,6 @@ export const getDifficultyBenchmarkByDeviation = cache(
     )
   }
 )
-
 export const getQualificationComparisons = cache(
   async (): Promise<QualificationComparison[]> => {
     const data = await getSiteData()
@@ -297,6 +296,15 @@ export const getQualificationComparisons = cache(
         faq_2_answer: r.faq_2_answer,
         faq_3_question: r.faq_3_question,
         faq_3_answer: r.faq_3_answer,
+        faq_4_question: r.faq_4_question,
+        faq_4_answer: r.faq_4_answer,
+        faq_5_question: r.faq_5_question,
+        faq_5_answer: r.faq_5_answer,
+
+        evidence_note: r.evidence_note,
+        source_url_1: r.source_url_1,
+        source_url_2: r.source_url_2,
+        last_verified_at: r.last_verified_at,
 
         publish_flag: toBool(r.publish_flag),
       }))

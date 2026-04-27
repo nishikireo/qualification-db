@@ -144,6 +144,15 @@ export type QualificationComparison = {
   faq_2_answer: string
   faq_3_question: string
   faq_3_answer: string
+  faq_4_question: string
+  faq_4_answer: string
+  faq_5_question: string
+  faq_5_answer: string
+
+  evidence_note: string
+  source_url_1: string
+  source_url_2: string
+  last_verified_at: string
 
   publish_flag: boolean
 }

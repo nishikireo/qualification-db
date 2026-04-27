@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd"
+import StructuredData from "@/components/StructuredData"
 import {
   getDifficultyBenchmarkByDeviation,
   getQualificationComparisonBySlug,
@@ -39,7 +40,7 @@ function getDifficultyGapLabel(left: number | null | undefined, right: number | 
 
   const gap = right - left
   if (gap === 0) return "同程度"
-  if (gap > 0) return `${right - left}ポイント${right > left ? "右が高い" : ""}`
+  if (gap > 0) return `${Math.abs(gap)}ポイント${right > left ? "右が高い" : ""}`
   return `${Math.abs(gap)}ポイント左が高い`
 }
 
@@ -76,6 +77,34 @@ function intentLabel(value: string) {
   return map[value] ?? value
 }
 
+function titleByIntent(
+  intent: string,
+  leftName: string,
+  rightName: string
+) {
+  if (intent === "conversion") {
+    return `${leftName}は${rightName}に換算するとどれくらい？`
+  }
+
+  if (intent === "overlap") {
+    return `${leftName}と${rightName}はどっちが難しい？範囲の重複も比較`
+  }
+
+  if (intent === "same_series") {
+    return `${leftName}と${rightName}の難易度差・追加学習時間を比較`
+  }
+
+  if (intent === "learning_path") {
+    return `${leftName}と${rightName}はどちらを先に取るべき？`
+  }
+
+  if (intent === "difficulty_comparison") {
+    return `${leftName}と${rightName}はどっちが難しい？`
+  }
+
+  return `${leftName}と${rightName}はどっちを取るべき？`
+}
+
 export async function generateStaticParams() {
   const comparisons = await getQualificationComparisons()
 
@@ -96,7 +125,11 @@ export async function generateMetadata({ params }: Props) {
   if (!left || !right) return {}
 
   return {
-    title: `${left.name_short}と${right.name_short}はどっちが難しい？勉強時間・範囲の重複を比較 | オープン資格`,
+    title: `${titleByIntent(
+      comparison.search_intent_type,
+      left.name_short,
+      right.name_short
+    )} | オープン資格`,
     description: `${left.name_short}と${right.name_short}を、難易度偏差値、勉強時間、知識範囲の重複、追加学習時間、どちらを先に取るべきかで比較します。`,
   }
 }
@@ -134,7 +167,31 @@ export default async function ComparePage({ params }: Props) {
       question: comparison.faq_3_question,
       answer: comparison.faq_3_answer,
     },
+    {
+      question: comparison.faq_4_question,
+      answer: comparison.faq_4_answer,
+    },
+    {
+      question: comparison.faq_5_question,
+      answer: comparison.faq_5_answer,
+    },
   ].filter((faq) => faq.question && faq.answer)
+
+  const faqJsonLd =
+    faqs.length > 0
+      ? {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: faqs.map((faq) => ({
+            "@type": "Question",
+            name: faq.question,
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: faq.answer,
+            },
+          })),
+        }
+      : null
 
   return (
     <main className="bg-white">
@@ -148,6 +205,8 @@ export default async function ComparePage({ params }: Props) {
           },
         ]}
       />
+
+      {faqJsonLd && <StructuredData data={faqJsonLd} />}
 
       <div className="mx-auto max-w-5xl px-6 py-10">
         <nav className="mb-6 text-sm text-neutral-500">
@@ -175,7 +234,7 @@ export default async function ComparePage({ params }: Props) {
             {intentLabel(comparison.search_intent_type)}
           </div>
           <h1 className="mt-2 text-4xl font-semibold tracking-tight text-neutral-950">
-            {left.name_short}と{right.name_short}はどっちが難しい？
+            {titleByIntent(comparison.search_intent_type, left.name_short, right.name_short)}
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-7 text-neutral-600">
             {left.name_short}と{right.name_short}を、難易度偏差値、勉強時間、
@@ -466,6 +525,59 @@ export default async function ComparePage({ params }: Props) {
                   </p>
                 </div>
               ))}
+            </div>
+          </section>
+        )}
+
+        {(comparison.evidence_note ||
+          comparison.source_url_1 ||
+          comparison.source_url_2 ||
+          comparison.last_verified_at) && (
+          <section className="border-t border-neutral-200/70 py-8">
+            <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
+              根拠・出典
+            </h2>
+            <div className="rounded-lg border border-neutral-200/70 p-5">
+              {comparison.evidence_note && (
+                <p className="text-sm leading-8 text-neutral-700">
+                  {comparison.evidence_note}
+                </p>
+              )}
+
+              {(comparison.source_url_1 || comparison.source_url_2) && (
+                <ul className="mt-4 list-disc space-y-2 pl-5 text-sm text-neutral-700">
+                  {comparison.source_url_1 && (
+                    <li>
+                      <a
+                        href={comparison.source_url_1}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="underline hover:text-neutral-950"
+                      >
+                        出典1
+                      </a>
+                    </li>
+                  )}
+                  {comparison.source_url_2 && (
+                    <li>
+                      <a
+                        href={comparison.source_url_2}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="underline hover:text-neutral-950"
+                      >
+                        出典2
+                      </a>
+                    </li>
+                  )}
+                </ul>
+              )}
+
+              {comparison.last_verified_at && (
+                <p className="mt-4 text-xs text-neutral-500">
+                  最終確認日: {comparison.last_verified_at}
+                </p>
+              )}
             </div>
           </section>
         )}
