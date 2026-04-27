@@ -162,8 +162,8 @@ function PassRateLineChart({ points }: { points: ChartPoint[] }) {
   const yTicks = [minRate, Math.round((minRate + maxRate) / 2), maxRate]
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-neutral-200/70 p-3 md:p-4">
-      <div className="min-w-[560px] md:min-w-[680px]">
+    <div className="w-full max-w-full overflow-x-auto rounded-lg border border-neutral-200/70 p-3 md:p-4">
+      <div className="w-[680px] max-w-none shrink-0">
         <svg
           viewBox={`0 0 ${width} ${height}`}
           role="img"
@@ -274,8 +274,8 @@ function ExamineesBarChart({ points }: { points: ChartPoint[] }) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-neutral-200/70 p-3 md:p-4">
-      <div className="min-w-[560px] md:min-w-[680px]">
+    <div className="w-full max-w-full overflow-x-auto rounded-lg border border-neutral-200/70 p-3 md:p-4">
+      <div className="w-[680px] max-w-none shrink-0">
         <svg
           viewBox={`0 0 ${width} ${height}`}
           role="img"
