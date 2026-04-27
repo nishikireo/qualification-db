@@ -2,9 +2,9 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd"
 import {
-  getComparedQualifications,
   getDifficultyBenchmarkByDeviation,
   getQualificationBySlug,
+  getQualificationComparisonsByQualificationSlug,
   getQualificationMetricsBySlug,
   getQualificationPastLinksBySlug,
   getQualificationQuizItemsBySlug,
@@ -106,16 +106,22 @@ export default async function QualificationPage({ params, searchParams }: Props)
   const resolvedSearchParams = await searchParams
   const q = await getQualificationBySlug(slug)
   if (!q) notFound()
-
-  const [compared, metrics, pastLinks, quizItems, allQualifications, benchmark] =
-    await Promise.all([
-      getComparedQualifications(slug),
-      getQualificationMetricsBySlug(slug),
-      getQualificationPastLinksBySlug(slug),
-      getQualificationQuizItemsBySlug(slug),
-      getQualifications(),
-      getDifficultyBenchmarkByDeviation(q.difficulty_deviation),
-    ])
+    
+  const [
+    comparisons,
+    metrics,
+    pastLinks,
+    quizItems,
+    allQualifications,
+    benchmark,
+  ] = await Promise.all([
+    getQualificationComparisonsByQualificationSlug(slug),
+    getQualificationMetricsBySlug(slug),
+    getQualificationPastLinksBySlug(slug),
+    getQualificationQuizItemsBySlug(slug),
+    getQualifications(),
+    getDifficultyBenchmarkByDeviation(q.difficulty_deviation),
+  ])
 
   const sameCategoryQualifications = allQualifications
     .filter(
@@ -544,22 +550,44 @@ export default async function QualificationPage({ params, searchParams }: Props)
           </section>
         )}
 
-        <section className="border-t border-neutral-200/70 py-8">
-          <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
-            比較されやすい資格
-          </h2>
-          <div className="grid gap-3 md:grid-cols-2">
-            {compared.map((item) => (
-              <Link
-                key={item.slug}
-                href={`/compare/${q.slug}-vs-${item.slug}`}
-                className="rounded-lg border border-neutral-200/70 p-4 text-sm text-neutral-700 transition hover:border-neutral-400 hover:text-neutral-950"
-              >
-                {q.name_short}と{item.name_short}を比較する
-              </Link>
-            ))}
-          </div>
-        </section>
+        {comparisons.length > 0 && (
+          <section className="border-t border-neutral-200/70 py-8">
+            <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
+              比較されやすい資格
+            </h2>
+
+            <div className="grid gap-3 md:grid-cols-2">
+              {comparisons.map((comparison) => {
+                const otherSlug =
+                  comparison.left_slug === q.slug
+                    ? comparison.right_slug
+                    : comparison.left_slug
+
+                const other = allQualifications.find((item) => item.slug === otherSlug)
+
+                if (!other) return null
+
+                return (
+                  <Link
+                    key={comparison.comparison_slug}
+                    href={`/compare/${comparison.comparison_slug}`}
+                    className="rounded-lg border border-neutral-200/70 p-4 text-sm text-neutral-700 transition hover:border-neutral-400 hover:text-neutral-950"
+                  >
+                    <div className="font-medium text-neutral-950">
+                      {q.name_short}と{other.name_short}を比較する
+                    </div>
+
+                    {comparison.relation_reason && (
+                      <p className="mt-2 line-clamp-2 text-sm leading-6 text-neutral-600">
+                        {comparison.relation_reason}
+                      </p>
+                    )}
+                  </Link>
+                )
+              })}
+            </div>
+          </section>
+        )}
 
         {sameCategoryQualifications.length > 0 && (
           <section className="border-t border-neutral-200/70 py-8">

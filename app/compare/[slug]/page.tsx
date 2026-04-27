@@ -1,7 +1,12 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd"
-import { getQualifications, getRelations } from "@/lib/data"
+import {
+  getDifficultyBenchmarkByDeviation,
+  getQualificationComparisonBySlug,
+  getQualificationComparisons,
+  getQualifications,
+} from "@/lib/data"
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://open-shikaku.jp"
 
@@ -9,81 +14,127 @@ type Props = {
   params: Promise<{ slug: string }>
 }
 
-function parseCompareSlug(slug: string) {
-  const parts = slug.split("-vs-")
-  if (parts.length !== 2) return null
-
-  return {
-    leftSlug: parts[0],
-    rightSlug: parts[1],
-  }
-}
-
-function splitLines(text: string | undefined) {
-  if (!text) return []
-  return text
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean)
-}
-
 function salaryLabel(min: number | null | undefined, max: number | null | undefined) {
   if (min === null || min === undefined || max === null || max === undefined) return "-"
   return `${min}〜${max}万円`
 }
 
-export async function generateStaticParams() {
-  const relations = await getRelations()
+function hoursLabel(min: number | null | undefined, max: number | null | undefined) {
+  if (min === null || min === undefined || max === null || max === undefined) return "-"
+  return `${min}〜${max}時間`
+}
 
-  return relations
-    .filter((r) => r.publish_flag && r.relation_type === "compared_with")
-    .map((r) => ({
-      slug: `${r.qualification_slug}-vs-${r.related_slug}`,
-    }))
+function percentLabel(value: number | null | undefined) {
+  if (value === null || value === undefined) return "-"
+  return `${value}%`
+}
+
+function scoreLabel(value: number | null | undefined) {
+  if (value === null || value === undefined) return "-"
+  return `${value}`
+}
+
+function getDifficultyGapLabel(left: number | null | undefined, right: number | null | undefined) {
+  if (left === null || left === undefined || right === null || right === undefined) return "-"
+
+  const gap = right - left
+  if (gap === 0) return "同程度"
+  if (gap > 0) return `${right - left}ポイント${right > left ? "右が高い" : ""}`
+  return `${Math.abs(gap)}ポイント左が高い`
+}
+
+function recommendedOrderLabel(
+  value: string,
+  left: { slug: string; name_short: string },
+  right: { slug: string; name_short: string }
+) {
+  if (!value) return "目的による"
+
+  const normalized = value.toUpperCase()
+  const leftKey = left.slug.replaceAll("-", "_").toUpperCase()
+  const rightKey = right.slug.replaceAll("-", "_").toUpperCase()
+
+  if (normalized === "DEPENDS") return "目的による"
+  if (normalized === "EITHER") return "どちらからでも可"
+  if (normalized.includes(leftKey)) return `${left.name_short}を先に取る`
+  if (normalized.includes(rightKey)) return `${right.name_short}を先に取る`
+
+  return "目的による"
+}
+
+function intentLabel(value: string) {
+  const map: Record<string, string> = {
+    difficulty_comparison: "難易度比較",
+    conversion: "換算目安",
+    learning_path: "学習ステップ",
+    overlap: "範囲の重複",
+    career_choice: "キャリア選択",
+    same_series: "上位・下位比較",
+    same_field: "同領域比較",
+  }
+
+  return map[value] ?? value
+}
+
+export async function generateStaticParams() {
+  const comparisons = await getQualificationComparisons()
+
+  return comparisons.map((item) => ({
+    slug: item.comparison_slug,
+  }))
 }
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params
-  const parsed = parseCompareSlug(slug)
-  if (!parsed) return {}
+  const comparison = await getQualificationComparisonBySlug(slug)
+  if (!comparison) return {}
 
   const qualifications = await getQualifications()
-  const left = qualifications.find((q) => q.slug === parsed.leftSlug)
-  const right = qualifications.find((q) => q.slug === parsed.rightSlug)
+  const left = qualifications.find((q) => q.slug === comparison.left_slug)
+  const right = qualifications.find((q) => q.slug === comparison.right_slug)
 
   if (!left || !right) return {}
 
   return {
-    title: `${left.name_short}と${right.name_short}の違いを比較 | オープン資格`,
-    description: `${left.name_short}と${right.name_short}を、難易度、合格率、勉強時間、受験料、独学しやすさ、転職価値で比較します。`,
+    title: `${left.name_short}と${right.name_short}はどっちが難しい？勉強時間・範囲の重複を比較 | オープン資格`,
+    description: `${left.name_short}と${right.name_short}を、難易度偏差値、勉強時間、知識範囲の重複、追加学習時間、どちらを先に取るべきかで比較します。`,
   }
 }
 
 export default async function ComparePage({ params }: Props) {
   const { slug } = await params
-  const parsed = parseCompareSlug(slug)
 
-  if (!parsed) notFound()
-
-  const [qualifications, relations] = await Promise.all([
+  const [comparison, qualifications] = await Promise.all([
+    getQualificationComparisonBySlug(slug),
     getQualifications(),
-    getRelations(),
   ])
 
-  const relation = relations.find(
-    (r) =>
-      r.publish_flag &&
-      r.relation_type === "compared_with" &&
-      r.qualification_slug === parsed.leftSlug &&
-      r.related_slug === parsed.rightSlug
-  )
+  if (!comparison) notFound()
 
-  if (!relation) notFound()
-
-  const left = qualifications.find((q) => q.slug === parsed.leftSlug)
-  const right = qualifications.find((q) => q.slug === parsed.rightSlug)
+  const left = qualifications.find((q) => q.slug === comparison.left_slug)
+  const right = qualifications.find((q) => q.slug === comparison.right_slug)
 
   if (!left || !right) notFound()
+
+  const [leftBenchmark, rightBenchmark] = await Promise.all([
+    getDifficultyBenchmarkByDeviation(left.difficulty_deviation),
+    getDifficultyBenchmarkByDeviation(right.difficulty_deviation),
+  ])
+
+  const faqs = [
+    {
+      question: comparison.faq_1_question,
+      answer: comparison.faq_1_answer,
+    },
+    {
+      question: comparison.faq_2_question,
+      answer: comparison.faq_2_answer,
+    },
+    {
+      question: comparison.faq_3_question,
+      answer: comparison.faq_3_answer,
+    },
+  ].filter((faq) => faq.question && faq.answer)
 
   return (
     <main className="bg-white">
@@ -120,29 +171,86 @@ export default async function ComparePage({ params }: Props) {
         </nav>
 
         <header className="border-b border-neutral-200/70 pb-8">
-          <h1 className="text-4xl font-semibold tracking-tight text-neutral-950">
-            {left.name_short}と{right.name_short}の違いを比較
+          <div className="text-sm text-neutral-500">
+            {intentLabel(comparison.search_intent_type)}
+          </div>
+          <h1 className="mt-2 text-4xl font-semibold tracking-tight text-neutral-950">
+            {left.name_short}と{right.name_short}はどっちが難しい？
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-7 text-neutral-600">
-            {left.name_short}と{right.name_short}を、難易度、合格率、勉強時間、受験料、
-            独学しやすさ、転職価値の観点で比較します。
+            {left.name_short}と{right.name_short}を、難易度偏差値、勉強時間、
+            知識範囲の重複、追加学習時間、どちらを先に取るべきかで比較します。
           </p>
-          {relation.relation_reason && (
-            <p className="mt-3 text-sm text-neutral-500">
-              比較の観点: {relation.relation_reason}
-            </p>
-          )}
         </header>
 
-        <section className="border-t border-transparent py-8">
+        <section className="py-8">
           <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
-            比較表
+            結論
           </h2>
+          <div className="rounded-lg border border-neutral-200/70 p-5">
+            <p className="text-sm leading-8 text-neutral-700">
+              {comparison.decision_summary}
+            </p>
+          </div>
+        </section>
+
+        <section className="border-t border-neutral-200/70 py-8">
+          <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
+            まず押さえるべき比較ポイント
+          </h2>
+          <div className="grid gap-3 md:grid-cols-4">
+            <div className="rounded-lg border border-neutral-200/70 p-4">
+              <div className="text-[11px] text-neutral-500">知識重複率</div>
+              <div className="mt-1 text-xl font-semibold text-neutral-950">
+                {percentLabel(comparison.knowledge_overlap_rate)}
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-neutral-200/70 p-4">
+              <div className="text-[11px] text-neutral-500">
+                {left.name_short} → {right.name_short}
+              </div>
+              <div className="mt-1 text-xl font-semibold text-neutral-950">
+                {hoursLabel(
+                  comparison.left_to_right_hours_min,
+                  comparison.left_to_right_hours_max
+                )}
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-neutral-200/70 p-4">
+              <div className="text-[11px] text-neutral-500">
+                {right.name_short} → {left.name_short}
+              </div>
+              <div className="mt-1 text-xl font-semibold text-neutral-950">
+                {hoursLabel(
+                  comparison.right_to_left_hours_min,
+                  comparison.right_to_left_hours_max
+                )}
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-neutral-200/70 p-4">
+              <div className="text-[11px] text-neutral-500">おすすめ順</div>
+              <div className="mt-1 text-sm font-semibold leading-6 text-neutral-950">
+                {recommendedOrderLabel(comparison.recommended_order, left, right)}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="border-t border-neutral-200/70 py-8">
+          <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
+            難易度・勉強時間の比較
+          </h2>
+
           <div className="overflow-x-auto rounded-lg border border-neutral-200/70">
-            <table className="w-full min-w-[720px] border-collapse text-sm">
+            <table className="w-full min-w-[760px] border-collapse text-sm">
               <thead>
                 <tr className="border-b border-neutral-200/70 bg-neutral-50">
-                  <th className="px-4 py-3 text-left font-medium text-neutral-600">項目</th>
+                  <th className="px-4 py-3 text-left font-medium text-neutral-600">
+                    項目
+                  </th>
                   <th className="px-4 py-3 text-left font-medium text-neutral-600">
                     {left.name_short}
                   </th>
@@ -154,54 +262,76 @@ export default async function ComparePage({ params }: Props) {
               <tbody>
                 <tr className="border-b border-neutral-200/70">
                   <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
-                    カテゴリ
+                    難易度偏差値
                   </th>
-                  <td className="px-4 py-3 text-neutral-900">{left.category_primary}</td>
-                  <td className="px-4 py-3 text-neutral-900">{right.category_primary}</td>
+                  <td className="px-4 py-3 text-neutral-900">
+                    {scoreLabel(left.difficulty_deviation)}
+                  </td>
+                  <td className="px-4 py-3 text-neutral-900">
+                    {scoreLabel(right.difficulty_deviation)}
+                  </td>
                 </tr>
+
                 <tr className="border-b border-neutral-200/70">
                   <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
-                    種別
+                    難易度帯
                   </th>
-                  <td className="px-4 py-3 text-neutral-900">{left.qualification_type}</td>
-                  <td className="px-4 py-3 text-neutral-900">{right.qualification_type}</td>
+                  <td className="px-4 py-3 text-neutral-900">
+                    {leftBenchmark?.band_label ?? "-"}
+                  </td>
+                  <td className="px-4 py-3 text-neutral-900">
+                    {rightBenchmark?.band_label ?? "-"}
+                  </td>
                 </tr>
+
                 <tr className="border-b border-neutral-200/70">
                   <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
-                    難易度
+                    大学群の目安
                   </th>
-                  <td className="px-4 py-3 text-neutral-900">{left.difficulty_score ?? "-"} / 100</td>
-                  <td className="px-4 py-3 text-neutral-900">{right.difficulty_score ?? "-"} / 100</td>
+                  <td className="px-4 py-3 text-neutral-900">
+                    {leftBenchmark?.university_group ?? "-"}
+                  </td>
+                  <td className="px-4 py-3 text-neutral-900">
+                    {rightBenchmark?.university_group ?? "-"}
+                  </td>
                 </tr>
+
+                <tr className="border-b border-neutral-200/70">
+                  <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
+                    難易度差
+                  </th>
+                  <td className="px-4 py-3 text-neutral-900" colSpan={2}>
+                    {getDifficultyGapLabel(
+                      left.difficulty_deviation,
+                      right.difficulty_deviation
+                    )}
+                  </td>
+                </tr>
+
+                <tr className="border-b border-neutral-200/70">
+                  <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
+                    通常の勉強時間
+                  </th>
+                  <td className="px-4 py-3 text-neutral-900">
+                    {hoursLabel(left.study_hours_min, left.study_hours_max)}
+                  </td>
+                  <td className="px-4 py-3 text-neutral-900">
+                    {hoursLabel(right.study_hours_min, right.study_hours_max)}
+                  </td>
+                </tr>
+
                 <tr className="border-b border-neutral-200/70">
                   <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
                     合格率
                   </th>
-                  <td className="px-4 py-3 text-neutral-900">{left.pass_rate_latest ?? "-"}%</td>
-                  <td className="px-4 py-3 text-neutral-900">{right.pass_rate_latest ?? "-"}%</td>
-                </tr>
-                <tr className="border-b border-neutral-200/70">
-                  <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
-                    勉強時間
-                  </th>
                   <td className="px-4 py-3 text-neutral-900">
-                    {left.study_hours_min ?? "-"}〜{left.study_hours_max ?? "-"}時間
+                    {percentLabel(left.pass_rate_latest)}
                   </td>
                   <td className="px-4 py-3 text-neutral-900">
-                    {right.study_hours_min ?? "-"}〜{right.study_hours_max ?? "-"}時間
+                    {percentLabel(right.pass_rate_latest)}
                   </td>
                 </tr>
-                <tr className="border-b border-neutral-200/70">
-                  <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
-                    受験料
-                  </th>
-                  <td className="px-4 py-3 text-neutral-900">
-                    {left.exam_fee_tax_included?.toLocaleString() ?? "-"}円
-                  </td>
-                  <td className="px-4 py-3 text-neutral-900">
-                    {right.exam_fee_tax_included?.toLocaleString() ?? "-"}円
-                  </td>
-                </tr>
+
                 <tr className="border-b border-neutral-200/70">
                   <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
                     平均年収
@@ -213,116 +343,149 @@ export default async function ComparePage({ params }: Props) {
                     {salaryLabel(right.average_salary_min, right.average_salary_max)}
                   </td>
                 </tr>
-                <tr className="border-b border-neutral-200/70">
-                  <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
-                    独学適性
-                  </th>
-                  <td className="px-4 py-3 text-neutral-900">{left.self_study_score ?? "-"} / 100</td>
-                  <td className="px-4 py-3 text-neutral-900">{right.self_study_score ?? "-"} / 100</td>
-                </tr>
-                <tr className="border-b border-neutral-200/70">
-                  <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
-                    転職価値
-                  </th>
-                  <td className="px-4 py-3 text-neutral-900">{left.career_value_score ?? "-"} / 100</td>
-                  <td className="px-4 py-3 text-neutral-900">{right.career_value_score ?? "-"} / 100</td>
-                </tr>
-                <tr className="border-b border-neutral-200/70">
-                  <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
-                    独占業務
-                  </th>
-                  <td className="px-4 py-3 text-neutral-900">{left.exclusive_work_flag ? "あり" : "なし"}</td>
-                  <td className="px-4 py-3 text-neutral-900">{right.exclusive_work_flag ? "あり" : "なし"}</td>
-                </tr>
-                <tr className="border-b border-neutral-200/70">
-                  <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
-                    試験回数
-                  </th>
-                  <td className="px-4 py-3 text-neutral-900">{left.exam_frequency_text}</td>
-                  <td className="px-4 py-3 text-neutral-900">{right.exam_frequency_text}</td>
-                </tr>
-                <tr className="border-b border-neutral-200/70">
-                  <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
-                    受験資格
-                  </th>
-                  <td className="px-4 py-3 text-neutral-900">{left.eligibility_text}</td>
-                  <td className="px-4 py-3 text-neutral-900">{right.eligibility_text}</td>
-                </tr>
+
                 <tr>
                   <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
-                    試験形式
+                    受験料
                   </th>
-                  <td className="px-4 py-3 text-neutral-900">{left.exam_format_text}</td>
-                  <td className="px-4 py-3 text-neutral-900">{right.exam_format_text}</td>
+                  <td className="px-4 py-3 text-neutral-900">
+                    {left.exam_fee_tax_included?.toLocaleString() ?? "-"}円
+                  </td>
+                  <td className="px-4 py-3 text-neutral-900">
+                    {right.exam_fee_tax_included?.toLocaleString() ?? "-"}円
+                  </td>
                 </tr>
               </tbody>
             </table>
           </div>
+
+          {(leftBenchmark?.note || rightBenchmark?.note) && (
+            <p className="mt-3 text-xs leading-6 text-neutral-500">
+              {leftBenchmark?.note ?? rightBenchmark?.note}
+            </p>
+          )}
         </section>
 
-        <section className="border-t border-neutral-200/70 py-8">
-          <div className="grid gap-6 md:grid-cols-2">
+        {comparison.conversion_summary && (
+          <section className="border-t border-neutral-200/70 py-8">
+            <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
+              換算・置き換えの目安
+            </h2>
             <div className="rounded-lg border border-neutral-200/70 p-5">
-              <h2 className="text-lg font-semibold tracking-tight text-neutral-950">
-                {left.name_short}が向いている人
-              </h2>
-              <ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-7 text-neutral-700">
-                {splitLines(left.who_should_take).map((line) => (
-                  <li key={line}>{line}</li>
-                ))}
-              </ul>
+              <p className="text-sm leading-8 text-neutral-700">
+                {comparison.conversion_summary}
+              </p>
             </div>
+          </section>
+        )}
 
-            <div className="rounded-lg border border-neutral-200/70 p-5">
-              <h2 className="text-lg font-semibold tracking-tight text-neutral-950">
-                {right.name_short}が向いている人
-              </h2>
-              <ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-7 text-neutral-700">
-                {splitLines(right.who_should_take).map((line) => (
-                  <li key={line}>{line}</li>
-                ))}
-              </ul>
+        <section className="border-t border-neutral-200/70 py-8">
+          <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
+            知識範囲はどれくらい被るか
+          </h2>
+          <div className="rounded-lg border border-neutral-200/70 p-5">
+            <div className="text-[11px] text-neutral-500">知識重複率</div>
+            <div className="mt-1 text-2xl font-semibold text-neutral-950">
+              {percentLabel(comparison.knowledge_overlap_rate)}
             </div>
+            <p className="mt-4 text-sm leading-8 text-neutral-700">
+              {comparison.overlap_summary}
+            </p>
           </div>
         </section>
 
         <section className="border-t border-neutral-200/70 py-8">
-          <div className="grid gap-6 md:grid-cols-2">
+          <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
+            すでに片方を持っている場合の追加学習時間
+          </h2>
+
+          <div className="grid gap-4 md:grid-cols-2">
             <div className="rounded-lg border border-neutral-200/70 p-5">
-              <h2 className="text-lg font-semibold tracking-tight text-neutral-950">
-                {left.name_short}の特徴
-              </h2>
-              <p className="mt-4 text-sm leading-8 text-neutral-700">{left.summary_short}</p>
+              <h3 className="text-base font-semibold text-neutral-950">
+                {left.name_short}取得者が{right.name_short}を目指す場合
+              </h3>
+              <div className="mt-3 text-2xl font-semibold text-neutral-950">
+                {hoursLabel(
+                  comparison.left_to_right_hours_min,
+                  comparison.left_to_right_hours_max
+                )}
+              </div>
+              <p className="mt-4 text-sm leading-8 text-neutral-700">
+                {comparison.left_to_right_summary}
+              </p>
             </div>
 
             <div className="rounded-lg border border-neutral-200/70 p-5">
-              <h2 className="text-lg font-semibold tracking-tight text-neutral-950">
-                {right.name_short}の特徴
-              </h2>
-              <p className="mt-4 text-sm leading-8 text-neutral-700">{right.summary_short}</p>
+              <h3 className="text-base font-semibold text-neutral-950">
+                {right.name_short}取得者が{left.name_short}を目指す場合
+              </h3>
+              <div className="mt-3 text-2xl font-semibold text-neutral-950">
+                {hoursLabel(
+                  comparison.right_to_left_hours_min,
+                  comparison.right_to_left_hours_max
+                )}
+              </div>
+              <p className="mt-4 text-sm leading-8 text-neutral-700">
+                {comparison.right_to_left_summary}
+              </p>
             </div>
           </div>
         </section>
 
         <section className="border-t border-neutral-200/70 py-8">
           <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
-            どちらを先に取るか
+            どちらを先に取るべきか
           </h2>
-          <p className="text-sm leading-8 text-neutral-700">
-            一般には、学習コスト、実務との結びつき、独学しやすさを見ながら選ぶのが基本です。
-            難易度が低めで入りやすい資格から始める方法もあれば、
-            独占業務や転職価値を優先して先に取得する考え方もあります。
-          </p>
+          <div className="rounded-lg border border-neutral-200/70 p-5">
+            <div className="text-[11px] text-neutral-500">おすすめ順</div>
+            <div className="mt-1 text-base font-semibold text-neutral-950">
+              {recommendedOrderLabel(comparison.recommended_order, left, right)}
+            </div>
+            <p className="mt-4 text-sm leading-8 text-neutral-700">
+              {comparison.decision_summary}
+            </p>
+          </div>
         </section>
 
+        {faqs.length > 0 && (
+          <section className="border-t border-neutral-200/70 py-8">
+            <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
+              よくある質問
+            </h2>
+            <div className="space-y-3">
+              {faqs.map((faq) => (
+                <div
+                  key={faq.question}
+                  className="rounded-lg border border-neutral-200/70 p-5"
+                >
+                  <h3 className="text-sm font-semibold text-neutral-950">
+                    {faq.question}
+                  </h3>
+                  <p className="mt-3 text-sm leading-8 text-neutral-700">
+                    {faq.answer}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         <section className="border-t border-neutral-200/70 py-8">
+          <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
+            個別ページを見る
+          </h2>
           <div className="grid gap-3 md:grid-cols-2">
             <Link
               href={`/qualifications/${left.slug}`}
               className="rounded-lg border border-neutral-200/70 p-4 text-sm text-neutral-700 transition hover:border-neutral-400 hover:text-neutral-950"
             >
               <div className="text-[11px] text-neutral-500">個別ページへ</div>
-              <div className="mt-1 font-medium text-neutral-950">{left.name_short}</div>
+              <div className="mt-1 font-medium text-neutral-950">
+                {left.name_short}
+              </div>
+              <p className="mt-2 line-clamp-2 text-sm leading-6 text-neutral-600">
+                {left.summary_short}
+              </p>
             </Link>
 
             <Link
@@ -330,7 +493,12 @@ export default async function ComparePage({ params }: Props) {
               className="rounded-lg border border-neutral-200/70 p-4 text-sm text-neutral-700 transition hover:border-neutral-400 hover:text-neutral-950"
             >
               <div className="text-[11px] text-neutral-500">個別ページへ</div>
-              <div className="mt-1 font-medium text-neutral-950">{right.name_short}</div>
+              <div className="mt-1 font-medium text-neutral-950">
+                {right.name_short}
+              </div>
+              <p className="mt-2 line-clamp-2 text-sm leading-6 text-neutral-600">
+                {right.summary_short}
+              </p>
             </Link>
           </div>
         </section>

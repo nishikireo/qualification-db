@@ -37,11 +37,11 @@ async function main() {
     spreadsheetId,
     ranges: [
       "qualifications_master!A:ZZ",
-      "qualification_relations!A:ZZ",
       "qualification_metrics!A:ZZ",
       "qualification_past_links!A:ZZ",
       "qualification_quiz_items!A:ZZ",
       "difficulty_benchmark_master!A:ZZ",
+      "qualification_comparisons!A:ZZ",
       "site_pages!A:ZZ",
       "settings!A:ZZ",
     ],
@@ -57,11 +57,11 @@ async function main() {
   const payload = {
     fetchedAt: new Date().toISOString(),
     qualifications_master: rowsToObjects(getRangeValues("qualifications_master")),
-    qualification_relations: rowsToObjects(getRangeValues("qualification_relations")),
     qualification_metrics: rowsToObjects(getRangeValues("qualification_metrics")),
     qualification_past_links: rowsToObjects(getRangeValues("qualification_past_links")),
     qualification_quiz_items: rowsToObjects(getRangeValues("qualification_quiz_items")),
     difficulty_benchmark_master: rowsToObjects(getRangeValues("difficulty_benchmark_master")),
+    qualification_comparisons: rowsToObjects(getRangeValues("qualification_comparisons")),
     site_pages: rowsToObjects(getRangeValues("site_pages")),
     settings: rowsToObjects(getRangeValues("settings")),
   }

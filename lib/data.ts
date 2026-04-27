@@ -4,7 +4,7 @@ import { cache } from "react"
 import type {
   DifficultyBenchmark,
   Qualification,
-  QualificationRelation,
+  QualificationComparison,
   QualificationMetric,
   QualificationPastLink,
   QualificationQuizItem,
@@ -16,11 +16,11 @@ type RawRow = Record<string, string>
 type SiteDataFile = {
   fetchedAt: string
   qualifications_master: RawRow[]
-  qualification_relations: RawRow[]
   qualification_metrics: RawRow[]
   qualification_past_links: RawRow[]
   qualification_quiz_items: RawRow[]
   difficulty_benchmark_master: RawRow[]
+  qualification_comparisons: RawRow[]
   site_pages: RawRow[]
   settings: RawRow[]
 }
@@ -105,42 +105,6 @@ export const getQualificationBySlug = cache(
   async (slug: string): Promise<Qualification | null> => {
     const items = await getQualifications()
     return items.find((q) => q.slug === slug) ?? null
-  }
-)
-
-export const getRelations = cache(async (): Promise<QualificationRelation[]> => {
-  const data = await getSiteData()
-
-  return data.qualification_relations
-    .map((r) => ({
-      qualification_slug: r.qualification_slug,
-      related_slug: r.related_slug,
-      relation_type: r.relation_type,
-      relation_weight: Number(r.relation_weight || 0),
-      relation_reason: r.relation_reason,
-      publish_flag: toBool(r.publish_flag),
-    }))
-    .filter((r) => r.publish_flag)
-})
-
-export const getComparedQualifications = cache(
-  async (slug: string): Promise<Qualification[]> => {
-    const [items, relations] = await Promise.all([
-      getQualifications(),
-      getRelations(),
-    ])
-
-    const related = relations
-      .filter(
-        (r) =>
-          r.qualification_slug === slug &&
-          r.relation_type === "compared_with"
-      )
-      .sort((a, b) => b.relation_weight - a.relation_weight)
-
-    return related
-      .map((r) => items.find((q) => q.slug === r.related_slug))
-      .filter(Boolean) as Qualification[]
   }
 )
 
@@ -294,5 +258,66 @@ export const getDifficultyBenchmarkByDeviation = cache(
         return deviation >= min && deviation <= max
       }) ?? null
     )
+  }
+)
+
+export const getQualificationComparisons = cache(
+  async (): Promise<QualificationComparison[]> => {
+    const data = await getSiteData()
+
+    return data.qualification_comparisons
+      .map((r) => ({
+        comparison_slug: r.comparison_slug,
+        left_slug: r.left_slug,
+        right_slug: r.right_slug,
+
+        relation_type: r.relation_type || "compared_with",
+        relation_weight: toNum(r.relation_weight),
+        relation_reason: r.relation_reason,
+
+        search_intent_type: r.search_intent_type,
+        knowledge_overlap_rate: toNum(r.knowledge_overlap_rate),
+
+        left_to_right_hours_min: toNum(r.left_to_right_hours_min),
+        left_to_right_hours_max: toNum(r.left_to_right_hours_max),
+        right_to_left_hours_min: toNum(r.right_to_left_hours_min),
+        right_to_left_hours_max: toNum(r.right_to_left_hours_max),
+
+        recommended_order: r.recommended_order,
+
+        conversion_summary: r.conversion_summary,
+        overlap_summary: r.overlap_summary,
+        left_to_right_summary: r.left_to_right_summary,
+        right_to_left_summary: r.right_to_left_summary,
+        decision_summary: r.decision_summary,
+
+        faq_1_question: r.faq_1_question,
+        faq_1_answer: r.faq_1_answer,
+        faq_2_question: r.faq_2_question,
+        faq_2_answer: r.faq_2_answer,
+        faq_3_question: r.faq_3_question,
+        faq_3_answer: r.faq_3_answer,
+
+        publish_flag: toBool(r.publish_flag),
+      }))
+      .filter((item) => item.publish_flag)
+      .sort((a, b) => (b.relation_weight ?? 0) - (a.relation_weight ?? 0))
+  }
+)
+
+export const getQualificationComparisonBySlug = cache(
+  async (comparisonSlug: string): Promise<QualificationComparison | null> => {
+    const comparisons = await getQualificationComparisons()
+    return comparisons.find((item) => item.comparison_slug === comparisonSlug) ?? null
+  }
+)
+
+export const getQualificationComparisonsByQualificationSlug = cache(
+  async (slug: string): Promise<QualificationComparison[]> => {
+    const comparisons = await getQualificationComparisons()
+
+    return comparisons
+      .filter((item) => item.left_slug === slug || item.right_slug === slug)
+      .sort((a, b) => (b.relation_weight ?? 0) - (a.relation_weight ?? 0))
   }
 )

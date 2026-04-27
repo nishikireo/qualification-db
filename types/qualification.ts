@@ -6,39 +6,49 @@ export type Qualification = {
   qualification_type: string
   issuing_body: string
   official_site_url: string
+  official_exam_guide_url?: string
+  status?: string
+
   exam_frequency_text: string
+  exam_months_text?: string
   eligibility_text: string
   exam_format_text: string
+
   pass_rate_latest: number | null
   study_hours_min: number | null
   study_hours_max: number | null
   exam_fee_tax_included: number | null
+
+  average_salary_min: number | null
+  average_salary_max: number | null
+  average_salary_note?: string
+  source_average_salary_url?: string
+
+  renewal_required?: boolean
+  renewal_text?: string
+
   exclusive_work_flag: boolean
+  exclusive_work_text?: string
+
   difficulty_score: number | null
   difficulty_deviation: number | null
   self_study_score: number | null
   cost_performance_score: number | null
   career_value_score: number | null
+  job_relevance_score?: number | null
+  salary_up_potential_score?: number | null
+  brand_recognition_score?: number | null
+  practicality_score?: number | null
+
   summary_short: string
   difficulty_reason_text: string
   who_should_take: string
   who_should_not_take: string
+
   source_pass_rate_url?: string
   source_fee_url?: string
   source_eligibility_url?: string
-  average_salary_min: number | null
-  average_salary_max: number | null
-  average_salary_note?: string
   last_verified_at: string
-  publish_flag: boolean
-}
-
-export type QualificationRelation = {
-  qualification_slug: string
-  related_slug: string
-  relation_type: string
-  relation_weight: number
-  relation_reason?: string
   publish_flag: boolean
 }
 
@@ -100,5 +110,40 @@ export type DifficultyBenchmark = {
   university_group: string
   university_examples: string
   note: string
+  publish_flag: boolean
+}
+
+export type QualificationComparison = {
+  comparison_slug: string
+  left_slug: string
+  right_slug: string
+
+  relation_type: string
+  relation_weight: number | null
+  relation_reason: string
+
+  search_intent_type: string
+  knowledge_overlap_rate: number | null
+
+  left_to_right_hours_min: number | null
+  left_to_right_hours_max: number | null
+  right_to_left_hours_min: number | null
+  right_to_left_hours_max: number | null
+
+  recommended_order: string
+
+  conversion_summary: string
+  overlap_summary: string
+  left_to_right_summary: string
+  right_to_left_summary: string
+  decision_summary: string
+
+  faq_1_question: string
+  faq_1_answer: string
+  faq_2_question: string
+  faq_2_answer: string
+  faq_3_question: string
+  faq_3_answer: string
+
   publish_flag: boolean
 }

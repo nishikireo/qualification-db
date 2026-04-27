@@ -1,12 +1,16 @@
 import { MetadataRoute } from "next"
-import { getQualifications, getRelations, getStaticPages } from "@/lib/data"
+import {
+  getQualificationComparisons,
+  getQualifications,
+  getStaticPages,
+} from "@/lib/data"
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://open-shikaku.jp"
 
-  const [qualifications, relations, staticPages] = await Promise.all([
+  const [qualifications, comparisons, staticPages] = await Promise.all([
     getQualifications(),
-    getRelations(),
+    getQualificationComparisons(),
     getStaticPages(),
   ])
 
@@ -17,19 +21,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }))
 
-  const compareUrls: MetadataRoute.Sitemap = relations
-    .filter((r) => r.publish_flag && r.relation_type === "compared_with")
-    .map((r) => ({
-      url: `${baseUrl}/compare/${r.qualification_slug}-vs-${r.related_slug}`,
-      lastModified: new Date(),
-      changeFrequency: "monthly" as const,
-      priority: 0.7,
-    }))
+  const compareUrls: MetadataRoute.Sitemap = comparisons.map((comparison) => ({
+    url: `${baseUrl}/compare/${comparison.comparison_slug}`,
+    lastModified: new Date(),
+    changeFrequency: "monthly",
+    priority: 0.75,
+  }))
 
   const staticPageUrls: MetadataRoute.Sitemap = staticPages.map((page) => ({
     url: `${baseUrl}/${page.slug}`,
     lastModified: new Date(),
-    changeFrequency: "monthly" as const,
+    changeFrequency: "monthly",
     priority: page.slug === "about" ? 0.6 : 0.5,
   }))
 
