@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { getQualifications } from "@/lib/data"
+import HomeQualificationSearch from "@/components/HomeQualificationSearch"
 
 export const metadata = {
   title: "オープン資格",
@@ -85,6 +86,8 @@ export default async function HomePage({ searchParams }: Props) {
               難易度、合格率、勉強時間、受験料、独学しやすさ、転職価値を整理して、
               比較しやすい形で公開します。
             </p>
+            
+            <HomeQualificationSearch />
           </div>
 
           <div className="mx-auto mt-10 max-w-2xl">
