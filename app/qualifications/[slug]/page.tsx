@@ -258,21 +258,20 @@ export default async function QualificationPage({ params, searchParams }: Props)
                     {benchmark.university_group}
                   </div>
                 </div>
+                <div>
+                  <div className="text-[11px] text-neutral-500">大学例</div>
+                  <div className="mt-1 text-base font-medium text-neutral-950">
+                    {benchmark.university_examples}
+                  </div>
+                </div>
               </div>
 
-              {benchmark.university_examples && (
+              {benchmark.note && (
                 <div className="mt-5 border-t border-neutral-200/70 pt-4">
-                  <div className="text-[11px] text-neutral-500">大学名例</div>
-                  <p className="mt-1 text-sm leading-7 text-neutral-700">
-                    {benchmark.university_examples}
+                  <p className="mt-4 text-xs leading-6 text-neutral-500">
+                    {benchmark.note}
                   </p>
                 </div>
-              )}
-
-              {benchmark.note && (
-                <p className="mt-4 text-xs leading-6 text-neutral-500">
-                  {benchmark.note}
-                </p>
               )}
             </div>
           </section>
@@ -412,7 +411,7 @@ export default async function QualificationPage({ params, searchParams }: Props)
         {quizItems.length > 0 && (
           <section className="border-t border-neutral-200/70 py-8">
             <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
-              例題
+              試験問題のサンプル
             </h2>
             <div className="space-y-4">
               {quizItems.map((quiz, index) => {
