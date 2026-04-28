@@ -14,6 +14,12 @@ export type Qualification = {
   eligibility_text: string
   exam_format_text: string
 
+  passing_criteria_text: string
+  application_period_summary: string
+  exam_schedule_summary: string
+  test_location_summary: string
+  source_schedule_url: string
+
   pass_rate_latest: number | null
   study_hours_min: number | null
   study_hours_max: number | null
@@ -30,7 +36,6 @@ export type Qualification = {
   exclusive_work_flag: boolean
   exclusive_work_text?: string
 
-  difficulty_score: number | null
   difficulty_deviation: number | null
   self_study_score: number | null
   cost_performance_score: number | null
@@ -164,4 +169,20 @@ export type ListPage = {
   primary_metric: string
   secondary_filter: string
   publish_recommendation: boolean
+}
+
+export type QualificationExamSchedule = {
+  qualification_slug: string
+  exam_year: number | null
+  exam_period_label: string
+  application_start_date: string
+  application_end_date: string
+  exam_start_date: string
+  exam_end_date: string
+  result_date: string
+  test_locations: string
+  source_url: string
+  checked_at: string
+  publish_flag: boolean
+  notes: string
 }

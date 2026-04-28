@@ -9,6 +9,7 @@ import type {
   QualificationMetric,
   QualificationPastLink,
   QualificationQuizItem,
+  QualificationExamSchedule,
   SitePage,
 } from "@/types/qualification"
 
@@ -18,6 +19,7 @@ type SiteDataFile = {
   fetchedAt: string
   qualifications_master: RawRow[]
   qualification_metrics: RawRow[]
+  qualification_exam_schedules: RawRow[]
   qualification_past_links: RawRow[]
   qualification_quiz_items: RawRow[]
   difficulty_benchmark_master: RawRow[]
@@ -79,7 +81,6 @@ export const getQualifications = cache(async (): Promise<Qualification[]> => {
       exclusive_work_flag: toBool(r.exclusive_work_flag),
       exclusive_work_text: r.exclusive_work_text,
 
-      difficulty_score: toNum(r.difficulty_score),
       difficulty_deviation: toNum(r.difficulty_deviation),
       self_study_score: toNum(r.self_study_score),
       cost_performance_score: toNum(r.cost_performance_score),
@@ -99,6 +100,12 @@ export const getQualifications = cache(async (): Promise<Qualification[]> => {
       source_eligibility_url: r.source_eligibility_url,
       last_verified_at: r.last_verified_at,
       publish_flag: toBool(r.publish_flag),
+
+      passing_criteria_text: String(r.passing_criteria_text ?? ""),
+      application_period_summary: String(r.application_period_summary ?? ""),
+      exam_schedule_summary: String(r.exam_schedule_summary ?? ""),
+      test_location_summary: String(r.test_location_summary ?? ""),
+      source_schedule_url: String(r.source_schedule_url ?? ""),
     }))
     .filter((q) => q.publish_flag)
 })
@@ -351,5 +358,47 @@ export const getQualificationComparisonsByQualificationSlug = cache(
     return comparisons
       .filter((item) => item.left_slug === slug || item.right_slug === slug)
       .sort((a, b) => (b.relation_weight ?? 0) - (a.relation_weight ?? 0))
+  }
+)
+
+export const getQualificationExamSchedules = cache(
+  async (): Promise<QualificationExamSchedule[]> => {
+    const data = await getSiteData()
+    const rows = data.qualification_exam_schedules ?? []
+
+    return rows
+      .map((r) => ({
+        qualification_slug: r.qualification_slug,
+        exam_year: toNum(r.exam_year),
+        exam_period_label: r.exam_period_label,
+        application_start_date: r.application_start_date,
+        application_end_date: r.application_end_date,
+        exam_start_date: r.exam_start_date,
+        exam_end_date: r.exam_end_date,
+        result_date: r.result_date,
+        test_locations: r.test_locations,
+        source_url: r.source_url,
+        checked_at: r.checked_at,
+        publish_flag: toBool(r.publish_flag),
+        notes: r.notes,
+      }))
+      .filter((item) => item.publish_flag)
+  }
+)
+
+export const getQualificationExamSchedulesBySlug = cache(
+  async (slug: string): Promise<QualificationExamSchedule[]> => {
+    const schedules = await getQualificationExamSchedules()
+
+    return schedules
+      .filter((schedule) => schedule.qualification_slug === slug)
+      .sort((a, b) => {
+        const aDate =
+          a.exam_start_date || a.application_start_date || "9999-12-31"
+        const bDate =
+          b.exam_start_date || b.application_start_date || "9999-12-31"
+
+        return aDate.localeCompare(bDate)
+      })
   }
 )
