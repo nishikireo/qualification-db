@@ -204,7 +204,7 @@ export default async function ComparePage({ params }: Props) {
       <BreadcrumbJsonLd
         items={[
           { name: "ホーム", item: siteUrl },
-          { name: "資格一覧", item: `${siteUrl}/lists/difficulty` },
+          { name: "資格一覧", item: `${siteUrl}/qualifications` },
           {
             name: `${left.name_short}と${right.name_short}の比較`,
             item: `${siteUrl}/compare/${slug}`,
@@ -224,7 +224,7 @@ export default async function ComparePage({ params }: Props) {
             </li>
             <li>/</li>
             <li>
-              <Link href="/lists/difficulty" className="hover:text-neutral-950">
+              <Link href="/qualifications" className="hover:text-neutral-950">
                 資格一覧
               </Link>
             </li>

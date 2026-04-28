@@ -83,7 +83,7 @@ export type QualificationMetric = {
   notes?: string
 }
 
-export type QualificationPastLink = {
+export type QualificationResourceLink = {
   qualification_slug: string
   link_type: string
   link_title: string

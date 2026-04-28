@@ -7,7 +7,7 @@ import type {
   Qualification,
   QualificationComparison,
   QualificationMetric,
-  QualificationPastLink,
+  QualificationResourceLink,
   QualificationQuizItem,
   QualificationExamSchedule,
   SitePage,
@@ -194,8 +194,8 @@ export const getQualificationMetricsBySlug = cache(
   }
 )
 
-export const getQualificationPastLinks = cache(
-  async (): Promise<QualificationPastLink[]> => {
+export const getQualificationResourceLinks = cache(
+  async (): Promise<QualificationResourceLink[]> => {
     const data = await getSiteData()
 
     return data.qualification_resource_links
@@ -212,9 +212,9 @@ export const getQualificationPastLinks = cache(
   }
 )
 
-export const getQualificationPastLinksBySlug = cache(
-  async (slug: string): Promise<QualificationPastLink[]> => {
-    const items = await getQualificationPastLinks()
+export const getQualificationResourceLinksBySlug = cache(
+  async (slug: string): Promise<QualificationResourceLink[]> => {
+    const items = await getQualificationResourceLinks()
 
     return items
       .filter((item) => item.qualification_slug === slug)

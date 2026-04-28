@@ -6,7 +6,7 @@ import {
   getQualificationBySlug,
   getQualificationComparisonsByQualificationSlug,
   getQualificationMetricsBySlug,
-  getQualificationPastLinksBySlug,
+  getQualificationResourceLinksBySlug,
   getQualificationQuizItemsBySlug,
   getQualifications,
   getQualificationExamSchedulesBySlug,
@@ -324,7 +324,7 @@ export default async function QualificationPage({ params, searchParams }: Props)
   const [
     comparisons,
     metrics,
-    pastLinks,
+    resourceLinks,
     quizItems,
     allQualifications,
     benchmark,
@@ -332,7 +332,7 @@ export default async function QualificationPage({ params, searchParams }: Props)
   ] = await Promise.all([
     getQualificationComparisonsByQualificationSlug(slug),
     getQualificationMetricsBySlug(slug),
-    getQualificationPastLinksBySlug(slug),
+    getQualificationResourceLinksBySlug(slug),
     getQualificationQuizItemsBySlug(slug),
     getQualifications(),
     getDifficultyBenchmarkByDeviation(q.difficulty_deviation),
@@ -712,14 +712,14 @@ export default async function QualificationPage({ params, searchParams }: Props)
           </section>
         )}
 
-        {pastLinks.length > 0 && (
+        {resourceLinks.length > 0 && (
           <section className="border-t border-neutral-200/70 py-8">
             <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
-              公式過去問リンク
+              公式リンク・参考資料
             </h2>
             <div className="rounded-lg border border-neutral-200/70">
               <ul className="divide-y divide-neutral-200/70">
-                {pastLinks.map((link) => (
+                {resourceLinks.map((link) => (
                   <li key={`${link.qualification_slug}-${link.link_title}`} className="px-4 py-4">
                     <a
                       href={link.link_url}
