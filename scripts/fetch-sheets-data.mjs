@@ -38,7 +38,7 @@ async function main() {
     ranges: [
       "qualifications_master!A:ZZ",
       "qualification_metrics!A:ZZ",
-      "qualification_past_links!A:ZZ",
+      "qualification_resource_links!A:ZZ",
       "qualification_quiz_items!A:ZZ",
       "difficulty_benchmark_master!A:ZZ",
       "qualification_comparisons!A:ZZ",
@@ -59,7 +59,7 @@ async function main() {
     fetchedAt: new Date().toISOString(),
     qualifications_master: rowsToObjects(getRangeValues("qualifications_master")),
     qualification_metrics: rowsToObjects(getRangeValues("qualification_metrics")),
-    qualification_past_links: rowsToObjects(getRangeValues("qualification_past_links")),
+    qualification_resource_links: rowsToObjects(getRangeValues("qualification_resource_links")),
     qualification_quiz_items: rowsToObjects(getRangeValues("qualification_quiz_items")),
     difficulty_benchmark_master: rowsToObjects(getRangeValues("difficulty_benchmark_master")),
     qualification_comparisons: rowsToObjects(getRangeValues("qualification_comparisons")),

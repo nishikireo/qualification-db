@@ -20,7 +20,7 @@ type SiteDataFile = {
   qualifications_master: RawRow[]
   qualification_metrics: RawRow[]
   qualification_exam_schedules: RawRow[]
-  qualification_past_links: RawRow[]
+  qualification_resource_links: RawRow[]
   qualification_quiz_items: RawRow[]
   difficulty_benchmark_master: RawRow[]
   qualification_comparisons: RawRow[]
@@ -198,7 +198,7 @@ export const getQualificationPastLinks = cache(
   async (): Promise<QualificationPastLink[]> => {
     const data = await getSiteData()
 
-    return data.qualification_past_links
+    return data.qualification_resource_links
       .map((r) => ({
         qualification_slug: r.qualification_slug,
         link_type: r.link_type,
