@@ -12,6 +12,12 @@ import {
   getQualificationExamSchedulesBySlug,
 } from "@/lib/data"
 import QualificationMetricsSection from "@/components/QualificationMetricsSection"
+import {
+  formatDateJa,
+  formatDateRangeJa,
+  formatSalaryRange,
+  textOrDash,
+} from "@/lib/format"
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://open-shikaku.jp"
 
@@ -27,36 +33,6 @@ type QualificationExamSchedule = Awaited<
 >[number]
 
 
-function formatSalaryRange(min: number | null | undefined, max: number | null | undefined) {
-  if (min === null || min === undefined || max === null || max === undefined) return "-"
-  return `${min}〜${max}万円`
-}
-
-function formatDate(value: string) {
-  if (!value) return ""
-
-  const date = new Date(`${value}T00:00:00+09:00`)
-  if (Number.isNaN(date.getTime())) return value
-
-  return new Intl.DateTimeFormat("ja-JP", {
-    year: "numeric",
-    month: "numeric",
-    day: "numeric",
-  }).format(date)
-}
-
-function formatDateRange(start: string, end: string) {
-  if (!start && !end) return "-"
-  if (start && end && start === end) return formatDate(start)
-  if (start && end) return `${formatDate(start)}〜${formatDate(end)}`
-  if (start) return `${formatDate(start)}〜`
-  return `〜${formatDate(end)}`
-}
-
-function textOrDash(value: string | null | undefined) {
-  if (!value) return "-"
-  return value
-}
 
 function QualificationExamInfoSection({
   qualification,
@@ -104,7 +80,7 @@ function QualificationExamInfoSection({
             <div className="rounded-md bg-neutral-50 p-3">
               <div className="text-[11px] text-neutral-500">申込期間</div>
               <div className="mt-1 text-sm font-semibold leading-6 text-neutral-950">
-                {formatDateRange(
+                {formatDateRangeJa(
                   nextSchedule.application_start_date,
                   nextSchedule.application_end_date
                 )}
@@ -114,7 +90,7 @@ function QualificationExamInfoSection({
             <div className="rounded-md bg-neutral-50 p-3">
               <div className="text-[11px] text-neutral-500">試験日程</div>
               <div className="mt-1 text-sm font-semibold leading-6 text-neutral-950">
-                {formatDateRange(
+                {formatDateRangeJa(
                   nextSchedule.exam_start_date,
                   nextSchedule.exam_end_date
                 )}
@@ -125,7 +101,7 @@ function QualificationExamInfoSection({
               <div className="text-[11px] text-neutral-500">合格発表</div>
               <div className="mt-1 text-sm font-semibold leading-6 text-neutral-950">
                 {nextSchedule.result_date
-                  ? formatDate(nextSchedule.result_date)
+                  ? formatDateJa(nextSchedule.result_date)
                   : "-"}
               </div>
             </div>
@@ -143,7 +119,7 @@ function QualificationExamInfoSection({
               <div className="text-[11px] text-neutral-500">確認日</div>
               <div className="mt-1 text-sm font-semibold leading-6 text-neutral-950">
                 {nextSchedule.checked_at
-                  ? formatDate(nextSchedule.checked_at)
+                  ? formatDateJa(nextSchedule.checked_at)
                   : "-"}
               </div>
             </div>

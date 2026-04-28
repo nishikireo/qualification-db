@@ -1,4 +1,5 @@
 import type { QualificationMetric } from "@/types/qualification"
+import { formatNumber, formatPercent, formatYen } from "@/lib/format"
 
 type Props = {
   metrics: QualificationMetric[]
@@ -12,20 +13,6 @@ type ChartPoint = {
   passersCount: number | null
 }
 
-function formatNumber(value: number | null | undefined) {
-  if (value === null || value === undefined) return "-"
-  return value.toLocaleString()
-}
-
-function formatPercent(value: number | null | undefined) {
-  if (value === null || value === undefined) return "-"
-  return `${value}%`
-}
-
-function formatYen(value: number | null | undefined) {
-  if (value === null || value === undefined) return "-"
-  return `${value.toLocaleString()}円`
-}
 
 function getMetricLabel(metric: QualificationMetric) {
   const parts = [

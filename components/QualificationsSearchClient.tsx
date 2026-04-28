@@ -2,6 +2,13 @@
 
 import Link from "next/link"
 import { useMemo, useState } from "react"
+import {
+  formatPercent,
+  formatHoursRange,
+  formatYen,
+  formatSalaryRange,
+  numberValue,
+} from "@/lib/format"
 
 type QualificationSearchItem = {
   slug: string
@@ -52,30 +59,6 @@ type SortKey =
   | "salary_desc"
   | "exam_fee_asc"
 
-function formatPercent(value: number | null | undefined) {
-  if (value === null || value === undefined) return "-"
-  return `${value}%`
-}
-
-function formatHours(min: number | null | undefined, max: number | null | undefined) {
-  if (min === null || min === undefined || max === null || max === undefined) return "-"
-  return `${min}〜${max}時間`
-}
-
-function formatYen(value: number | null | undefined) {
-  if (value === null || value === undefined) return "-"
-  return `${value.toLocaleString()}円`
-}
-
-function formatSalary(min: number | null | undefined, max: number | null | undefined) {
-  if (min === null || min === undefined || max === null || max === undefined) return "-"
-  return `${min}〜${max}万円`
-}
-
-function numberValue(value: number | null | undefined, fallback = -1) {
-  if (value === null || value === undefined || Number.isNaN(value)) return fallback
-  return value
-}
 
 function getStudyHoursAverage(item: QualificationSearchItem) {
   const min = item.study_hours_min
@@ -472,7 +455,7 @@ export default function QualificationsSearchClient({
                   <div className="rounded-md bg-neutral-50 p-3">
                     <div className="text-[11px] text-neutral-500">勉強時間</div>
                     <div className="mt-1 font-semibold text-neutral-950">
-                      {formatHours(item.study_hours_min, item.study_hours_max)}
+                      {formatHoursRange(item.study_hours_min, item.study_hours_max)}
                     </div>
                   </div>
 
@@ -486,7 +469,7 @@ export default function QualificationsSearchClient({
                   <div className="rounded-md bg-neutral-50 p-3">
                     <div className="text-[11px] text-neutral-500">年収目安</div>
                     <div className="mt-1 font-semibold text-neutral-950">
-                      {formatSalary(item.average_salary_min, item.average_salary_max)}
+                      {formatSalaryRange(item.average_salary_min, item.average_salary_max)}
                     </div>
                   </div>
                 </div>
