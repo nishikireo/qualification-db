@@ -359,8 +359,8 @@ export default function QualificationMetricsSection({ metrics }: Props) {
       if (yearA !== yearB) return yearB - yearA
       return getMetricLabel(a).localeCompare(getMetricLabel(b), "ja")
     })
-  const visibleMobileMetrics = sortedMetrics.slice(0, 5)
-  const hiddenMobileMetrics = sortedMetrics.slice(5)
+  const visibleMobileMetrics = sortedMetrics.slice(0, 3)
+  const hiddenMobileMetrics = sortedMetrics.slice(3)
 
   return (
     <section className="border-t border-neutral-200/70 py-8">
@@ -379,7 +379,7 @@ export default function QualificationMetricsSection({ metrics }: Props) {
         </p>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <div className="rounded-lg border border-neutral-200/70 p-4">
           <div className="text-[11px] text-neutral-500">最新合格率</div>
           <div className="mt-1 text-2xl font-semibold text-neutral-950">

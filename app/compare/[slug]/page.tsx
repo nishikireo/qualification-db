@@ -25,6 +25,12 @@ function hoursLabel(min: number | null | undefined, max: number | null | undefin
   return `${min}〜${max}時間`
 }
 
+function additionalHoursLabel(min: number | null | undefined, max: number | null | undefined) {
+  const label = hoursLabel(min, max)
+  if (label === "-") return label
+  return `+${label}`
+}
+
 function percentLabel(value: number | null | undefined) {
   if (value === null || value === undefined) return "-"
   return `${value}%`
@@ -464,7 +470,7 @@ export default async function ComparePage({ params }: Props) {
                 {left.name_short}取得者が{right.name_short}を目指す場合
               </h3>
               <div className="mt-3 text-2xl font-semibold text-neutral-950">
-                {hoursLabel(
+                {additionalHoursLabel(
                   comparison.left_to_right_hours_min,
                   comparison.left_to_right_hours_max
                 )}
@@ -479,7 +485,7 @@ export default async function ComparePage({ params }: Props) {
                 {right.name_short}取得者が{left.name_short}を目指す場合
               </h3>
               <div className="mt-3 text-2xl font-semibold text-neutral-950">
-                {hoursLabel(
+                {additionalHoursLabel(
                   comparison.right_to_left_hours_min,
                   comparison.right_to_left_hours_max
                 )}
@@ -591,7 +597,7 @@ export default async function ComparePage({ params }: Props) {
               href={`/qualifications/${left.slug}`}
               className="rounded-lg border border-neutral-200/70 p-4 text-sm text-neutral-700 transition hover:border-neutral-400 hover:text-neutral-950"
             >
-              <div className="text-[11px] text-neutral-500">個別ページへ</div>
+              <div className="text-[11px] text-neutral-500">{left.category_primary}</div>
               <div className="mt-1 font-medium text-neutral-950">
                 {left.name_short}
               </div>
@@ -604,7 +610,7 @@ export default async function ComparePage({ params }: Props) {
               href={`/qualifications/${right.slug}`}
               className="rounded-lg border border-neutral-200/70 p-4 text-sm text-neutral-700 transition hover:border-neutral-400 hover:text-neutral-950"
             >
-              <div className="text-[11px] text-neutral-500">個別ページへ</div>
+              <div className="text-[11px] text-neutral-500">{right.category_primary}</div>
               <div className="mt-1 font-medium text-neutral-950">
                 {right.name_short}
               </div>

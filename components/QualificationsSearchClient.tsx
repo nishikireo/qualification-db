@@ -433,7 +433,7 @@ export default function QualificationsSearchClient({
               className="rounded-lg border border-neutral-200/70 p-5 transition hover:border-neutral-400"
             >
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-xs text-neutral-500">#{index + 1}</span>
 
@@ -465,7 +465,7 @@ export default function QualificationsSearchClient({
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 text-sm md:min-w-[460px] md:grid-cols-5">
+                <div className="grid grid-cols-2 gap-2 text-sm md:w-[460px] md:shrink-0 md:grid-cols-5">
                   <div className="rounded-md bg-neutral-50 p-3">
                     <div className="text-[11px] text-neutral-500">偏差値</div>
                     <div className="mt-1 font-semibold text-neutral-950">
