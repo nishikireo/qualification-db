@@ -1,36 +1,18 @@
 import Link from "next/link"
 import { getQualifications } from "@/lib/data"
 import HomeQualificationSearch from "@/components/HomeQualificationSearch"
+import {
+  formatHoursRange,
+  formatNumber,
+  formatPercent,
+  formatSalaryRange,
+  formatYen,
+} from "@/lib/format"
 
 export const metadata = {
   title: "オープン資格",
   description:
     "資格の難易度、合格率、勉強時間、受験料、独学しやすさ、転職価値をデータで比較する。",
-}
-
-function scoreLabel(value: number | null | undefined) {
-  if (value === null || value === undefined) return "-"
-  return `${value} / 100`
-}
-
-function feeLabel(value: number | null | undefined) {
-  if (value === null || value === undefined) return "-"
-  return `${value.toLocaleString()}円`
-}
-
-function salaryLabel(min: number | null | undefined, max: number | null | undefined) {
-  if (min === null || min === undefined || max === null || max === undefined) return "-"
-  return `${min}〜${max}万円`
-}
-
-function hoursLabel(min: number | null | undefined, max: number | null | undefined) {
-  if (min === null || min === undefined || max === null || max === undefined) return "-"
-  return `${min}〜${max}時間`
-}
-
-function percentLabel(value: number | null | undefined) {
-  if (value === null || value === undefined) return "-"
-  return `${value}%`
 }
 
 function getFeaturedQualifications<T extends { career_value_score: number | null | undefined }>(
@@ -125,7 +107,7 @@ export default async function HomePage() {
                   <div className="shrink-0 text-right">
                     <div className="text-[11px] text-neutral-500">難易度偏差値</div>
                     <div className="text-sm font-medium text-neutral-950">
-                      {scoreLabel(q.difficulty_deviation)}
+                      {formatNumber(q.difficulty_deviation)}
                     </div>
                   </div>
                 </div>
@@ -134,25 +116,25 @@ export default async function HomePage() {
                   <div>
                     <div className="text-[11px] text-neutral-500">合格率</div>
                     <div className="mt-1 text-neutral-900">
-                      {percentLabel(q.pass_rate_latest)}
+                      {formatPercent(q.pass_rate_latest)}
                     </div>
                   </div>
                   <div>
                     <div className="text-[11px] text-neutral-500">勉強時間</div>
                     <div className="mt-1 text-neutral-900">
-                      {hoursLabel(q.study_hours_min, q.study_hours_max)}
+                      {formatHoursRange(q.study_hours_min, q.study_hours_max)}
                     </div>
                   </div>
                   <div>
                     <div className="text-[11px] text-neutral-500">受験料</div>
                     <div className="mt-1 text-neutral-900">
-                      {feeLabel(q.exam_fee_tax_included)}
+                      {formatYen(q.exam_fee_tax_included)}
                     </div>
                   </div>
                   <div>
                     <div className="text-[11px] text-neutral-500">平均年収</div>
                     <div className="mt-1 text-neutral-900">
-                      {salaryLabel(q.average_salary_min, q.average_salary_max)}
+                      {formatSalaryRange(q.average_salary_min, q.average_salary_max)}
                     </div>
                   </div>
                 </div>

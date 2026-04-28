@@ -9,36 +9,24 @@ import {
   getQualifications,
 } from "@/lib/data"
 
+import {
+  formatHoursRange,
+  formatNumber,
+  formatPercent,
+  formatSalaryRange,
+  formatYen,
+} from "@/lib/format"
+
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://open-shikaku.jp"
 
 type Props = {
   params: Promise<{ slug: string }>
 }
 
-function salaryLabel(min: number | null | undefined, max: number | null | undefined) {
-  if (min === null || min === undefined || max === null || max === undefined) return "-"
-  return `${min}〜${max}万円`
-}
-
-function hoursLabel(min: number | null | undefined, max: number | null | undefined) {
-  if (min === null || min === undefined || max === null || max === undefined) return "-"
-  return `${min}〜${max}時間`
-}
-
 function additionalHoursLabel(min: number | null | undefined, max: number | null | undefined) {
-  const label = hoursLabel(min, max)
+  const label = formatHoursRange(min, max)
   if (label === "-") return label
   return `+${label}`
-}
-
-function percentLabel(value: number | null | undefined) {
-  if (value === null || value === undefined) return "-"
-  return `${value}%`
-}
-
-function scoreLabel(value: number | null | undefined) {
-  if (value === null || value === undefined) return "-"
-  return `${value}`
 }
 
 function getDifficultyGapLabel(left: number | null | undefined, right: number | null | undefined) {
@@ -267,7 +255,7 @@ export default async function ComparePage({ params }: Props) {
             <div className="rounded-lg border border-neutral-200/70 p-4">
               <div className="text-[11px] text-neutral-500">知識重複率</div>
               <div className="mt-1 text-xl font-semibold text-neutral-950">
-                {percentLabel(comparison.knowledge_overlap_rate)}
+                {formatPercent(comparison.knowledge_overlap_rate)}
               </div>
             </div>
 
@@ -276,7 +264,7 @@ export default async function ComparePage({ params }: Props) {
                 {left.name_short} → {right.name_short}
               </div>
               <div className="mt-1 text-xl font-semibold text-neutral-950">
-                {hoursLabel(
+                {formatHoursRange(
                   comparison.left_to_right_hours_min,
                   comparison.left_to_right_hours_max
                 )}
@@ -288,7 +276,7 @@ export default async function ComparePage({ params }: Props) {
                 {right.name_short} → {left.name_short}
               </div>
               <div className="mt-1 text-xl font-semibold text-neutral-950">
-                {hoursLabel(
+                {formatHoursRange(
                   comparison.right_to_left_hours_min,
                   comparison.right_to_left_hours_max
                 )}
@@ -330,10 +318,10 @@ export default async function ComparePage({ params }: Props) {
                     難易度偏差値
                   </th>
                   <td className="px-4 py-3 text-neutral-900">
-                    {scoreLabel(left.difficulty_deviation)}
+                    {formatNumber(left.difficulty_deviation)}
                   </td>
                   <td className="px-4 py-3 text-neutral-900">
-                    {scoreLabel(right.difficulty_deviation)}
+                    {formatNumber(right.difficulty_deviation)}
                   </td>
                 </tr>
 
@@ -378,10 +366,10 @@ export default async function ComparePage({ params }: Props) {
                     通常の勉強時間
                   </th>
                   <td className="px-4 py-3 text-neutral-900">
-                    {hoursLabel(left.study_hours_min, left.study_hours_max)}
+                    {formatHoursRange(left.study_hours_min, left.study_hours_max)}
                   </td>
                   <td className="px-4 py-3 text-neutral-900">
-                    {hoursLabel(right.study_hours_min, right.study_hours_max)}
+                    {formatHoursRange(right.study_hours_min, right.study_hours_max)}
                   </td>
                 </tr>
 
@@ -390,10 +378,10 @@ export default async function ComparePage({ params }: Props) {
                     合格率
                   </th>
                   <td className="px-4 py-3 text-neutral-900">
-                    {percentLabel(left.pass_rate_latest)}
+                    {formatPercent(left.pass_rate_latest)}
                   </td>
                   <td className="px-4 py-3 text-neutral-900">
-                    {percentLabel(right.pass_rate_latest)}
+                    {formatPercent(right.pass_rate_latest)}
                   </td>
                 </tr>
 
@@ -402,10 +390,10 @@ export default async function ComparePage({ params }: Props) {
                     平均年収
                   </th>
                   <td className="px-4 py-3 text-neutral-900">
-                    {salaryLabel(left.average_salary_min, left.average_salary_max)}
+                    {formatSalaryRange(left.average_salary_min, left.average_salary_max)}
                   </td>
                   <td className="px-4 py-3 text-neutral-900">
-                    {salaryLabel(right.average_salary_min, right.average_salary_max)}
+                    {formatSalaryRange(right.average_salary_min, right.average_salary_max)}
                   </td>
                 </tr>
 
@@ -414,10 +402,10 @@ export default async function ComparePage({ params }: Props) {
                     受験料
                   </th>
                   <td className="px-4 py-3 text-neutral-900">
-                    {left.exam_fee_tax_included?.toLocaleString() ?? "-"}円
+                    {formatYen(left.exam_fee_tax_included)}
                   </td>
                   <td className="px-4 py-3 text-neutral-900">
-                    {right.exam_fee_tax_included?.toLocaleString() ?? "-"}円
+                    {formatYen(right.exam_fee_tax_included)}
                   </td>
                 </tr>
               </tbody>
@@ -451,7 +439,7 @@ export default async function ComparePage({ params }: Props) {
           <div className="rounded-lg border border-neutral-200/70 p-5">
             <div className="text-[11px] text-neutral-500">知識重複率</div>
             <div className="mt-1 text-2xl font-semibold text-neutral-950">
-              {percentLabel(comparison.knowledge_overlap_rate)}
+              {formatPercent(comparison.knowledge_overlap_rate)}
             </div>
             <p className="mt-4 text-sm leading-8 text-neutral-700">
               {comparison.overlap_summary}

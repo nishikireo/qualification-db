@@ -2,6 +2,12 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd"
 import { getListPageBySlug, getListPages, getQualifications } from "@/lib/data"
+import {
+  formatHoursRange,
+  formatNumber,
+  formatPercent,
+  formatYen,
+} from "@/lib/format"
 import type { Qualification } from "@/types/qualification"
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://open-shikaku.jp"
@@ -10,25 +16,6 @@ type Props = {
   params: Promise<{ slug: string }>
 }
 
-function formatNumber(value: number | null | undefined) {
-  if (value === null || value === undefined) return "-"
-  return value.toLocaleString()
-}
-
-function formatPercent(value: number | null | undefined) {
-  if (value === null || value === undefined) return "-"
-  return `${value}%`
-}
-
-function formatHours(min: number | null | undefined, max: number | null | undefined) {
-  if (min === null || min === undefined || max === null || max === undefined) return "-"
-  return `${min}〜${max}時間`
-}
-
-function formatYen(value: number | null | undefined) {
-  if (value === null || value === undefined) return "-"
-  return `${value.toLocaleString()}円`
-}
 
 function getMetricValue(q: Qualification, metric: string): number {
   const value = q[metric as keyof Qualification]
@@ -274,7 +261,7 @@ export default async function ListPage({ params }: Props) {
                           勉強時間
                         </div>
                         <div className="mt-1 font-semibold text-neutral-950">
-                          {formatHours(q.study_hours_min, q.study_hours_max)}
+                          {formatHoursRange(q.study_hours_min, q.study_hours_max)}
                         </div>
                       </div>
 
