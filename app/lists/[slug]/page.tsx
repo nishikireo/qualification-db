@@ -39,7 +39,6 @@ function getMetricValue(q: Qualification, metric: string): number {
 
 function getMetricLabel(metric: string) {
   const map: Record<string, string> = {
-    difficulty_score: "難易度",
     difficulty_deviation: "難易度偏差値",
     self_study_score: "独学適性",
     cost_performance_score: "コスパ",
