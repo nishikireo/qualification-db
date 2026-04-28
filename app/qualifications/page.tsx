@@ -46,7 +46,6 @@ export default async function QualificationsPage({ searchParams }: Props) {
     eligibility_text: q.eligibility_text,
     exam_format_text: q.exam_format_text,
 
-    difficulty_score: q.difficulty_score,
     difficulty_deviation: q.difficulty_deviation,
     self_study_score: q.self_study_score,
     cost_performance_score: q.cost_performance_score,

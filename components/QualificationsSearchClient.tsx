@@ -26,7 +26,6 @@ type QualificationSearchItem = {
   eligibility_text: string
   exam_format_text?: string
 
-  difficulty_score: number | null
   difficulty_deviation?: number | null
   self_study_score: number | null
   cost_performance_score: number | null
@@ -115,23 +114,13 @@ function isCbt(item: QualificationSearchItem) {
 
 function difficultyBand(item: QualificationSearchItem) {
   const deviation = item.difficulty_deviation
-  const score = item.difficulty_score
 
-  if (deviation !== null && deviation !== undefined) {
-    if (deviation >= 65) return "hard"
-    if (deviation >= 55) return "middle"
-    if (deviation >= 45) return "normal"
-    return "easy"
-  }
+  if (deviation === null || deviation === undefined) return "unknown"
 
-  if (score !== null && score !== undefined) {
-    if (score >= 75) return "hard"
-    if (score >= 60) return "middle"
-    if (score >= 45) return "normal"
-    return "easy"
-  }
-
-  return "unknown"
+  if (deviation >= 65) return "hard"
+  if (deviation >= 55) return "middle"
+  if (deviation >= 45) return "normal"
+  return "easy"
 }
 
 function studyHoursBand(item: QualificationSearchItem) {
@@ -146,11 +135,11 @@ function studyHoursBand(item: QualificationSearchItem) {
 function sortItems(items: QualificationSearchItem[], sortKey: SortKey) {
   return [...items].sort((a, b) => {
     if (sortKey === "difficulty_desc") {
-      return numberValue(b.difficulty_deviation ?? b.difficulty_score) - numberValue(a.difficulty_deviation ?? a.difficulty_score)
+      return numberValue(b.difficulty_deviation) - numberValue(a.difficulty_deviation)
     }
 
     if (sortKey === "difficulty_asc") {
-      return numberValue(a.difficulty_deviation ?? a.difficulty_score, 9999) - numberValue(b.difficulty_deviation ?? b.difficulty_score, 9999)
+      return numberValue(a.difficulty_deviation, 9999) - numberValue(b.difficulty_deviation, 9999)
     }
 
     if (sortKey === "self_study_desc") {
@@ -469,7 +458,7 @@ export default function QualificationsSearchClient({
                   <div className="rounded-md bg-neutral-50 p-3">
                     <div className="text-[11px] text-neutral-500">偏差値</div>
                     <div className="mt-1 font-semibold text-neutral-950">
-                      {item.difficulty_deviation ?? item.difficulty_score ?? "-"}
+                      {item.difficulty_deviation ?? "-"}
                     </div>
                   </div>
 
