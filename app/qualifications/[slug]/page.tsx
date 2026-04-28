@@ -156,7 +156,7 @@ export default async function QualificationPage({ params, searchParams }: Props)
       <BreadcrumbJsonLd
         items={[
           { name: "ホーム", item: siteUrl },
-          { name: "資格一覧", item: `${siteUrl}/lists/difficulty` },
+          { name: "資格一覧", item: `${siteUrl}/qualifications` },
           { name: q.name_short, item: `${siteUrl}/qualifications/${q.slug}` },
         ]}
       />
@@ -171,7 +171,7 @@ export default async function QualificationPage({ params, searchParams }: Props)
             </li>
             <li>/</li>
             <li>
-              <Link href="/lists/difficulty" className="hover:text-neutral-950">
+              <Link href="/qualifications" className="hover:text-neutral-950">
                 資格一覧
               </Link>
             </li>
@@ -190,44 +190,64 @@ export default async function QualificationPage({ params, searchParams }: Props)
           </p>
         </header>
 
-        <section className="grid grid-cols-2 gap-3 py-8 md:grid-cols-5">
-          <div className="rounded-lg border border-neutral-200/70 p-4">
-            <div className="text-[11px] text-neutral-500">難易度偏差値</div>
-            <div className="mt-1 text-lg font-medium text-neutral-950">
-              {q.difficulty_deviation ?? "-"}
-            </div>
-            {benchmark?.band_label && (
-              <div className="mt-1 text-xs text-neutral-500">
-                {benchmark.band_label}
+        <section className="py-8">
+          <div className="mb-5">
+            <h2 className="text-lg font-semibold tracking-tight text-neutral-950">
+              基本指標
+            </h2>
+            <p className="mt-2 text-sm leading-7 text-neutral-600">
+              難易度偏差値、合格率、勉強時間、受験料、平均年収の目安をまとめています。
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+            <div className="rounded-lg border border-neutral-200/70 p-4">
+              <div className="text-[11px] text-neutral-500">難易度偏差値</div>
+              <div className="mt-1 text-lg font-medium text-neutral-950">
+                {q.difficulty_deviation ?? "-"}
               </div>
-            )}
-          </div>
-
-          <div className="rounded-lg border border-neutral-200/70 p-4">
-            <div className="text-[11px] text-neutral-500">合格率</div>
-            <div className="mt-1 text-lg font-medium text-neutral-950">
-              {q.pass_rate_latest ?? "-"}%
+              {benchmark?.band_label && (
+                <div className="mt-1 text-xs text-neutral-500">
+                  {benchmark.band_label}
+                </div>
+              )}
             </div>
-          </div>
 
-          <div className="rounded-lg border border-neutral-200/70 p-4">
-            <div className="text-[11px] text-neutral-500">勉強時間</div>
-            <div className="mt-1 text-lg font-medium text-neutral-950">
-              {q.study_hours_min ?? "-"}〜{q.study_hours_max ?? "-"}時間
+            <div className="rounded-lg border border-neutral-200/70 p-4">
+              <div className="text-[11px] text-neutral-500">合格率</div>
+              <div className="mt-1 text-lg font-medium text-neutral-950">
+                {q.pass_rate_latest !== null && q.pass_rate_latest !== undefined
+                  ? `${q.pass_rate_latest}%`
+                  : "-"}
+              </div>
             </div>
-          </div>
 
-          <div className="rounded-lg border border-neutral-200/70 p-4">
-            <div className="text-[11px] text-neutral-500">受験料</div>
-            <div className="mt-1 text-lg font-medium text-neutral-950">
-              {q.exam_fee_tax_included?.toLocaleString() ?? "-"}円
+            <div className="rounded-lg border border-neutral-200/70 p-4">
+              <div className="text-[11px] text-neutral-500">勉強時間</div>
+              <div className="mt-1 text-lg font-medium text-neutral-950">
+                {q.study_hours_min !== null &&
+                q.study_hours_min !== undefined &&
+                q.study_hours_max !== null &&
+                q.study_hours_max !== undefined
+                  ? `${q.study_hours_min}〜${q.study_hours_max}時間`
+                  : "-"}
+              </div>
             </div>
-          </div>
 
-          <div className="rounded-lg border border-neutral-200/70 p-4">
-            <div className="text-[11px] text-neutral-500">平均年収</div>
-            <div className="mt-1 text-lg font-medium text-neutral-950">
-              {formatSalaryRange(q.average_salary_min, q.average_salary_max)}円
+            <div className="rounded-lg border border-neutral-200/70 p-4">
+              <div className="text-[11px] text-neutral-500">受験料</div>
+              <div className="mt-1 text-lg font-medium text-neutral-950">
+                {q.exam_fee_tax_included !== null && q.exam_fee_tax_included !== undefined
+                  ? `${q.exam_fee_tax_included.toLocaleString()}円`
+                  : "-"}
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-neutral-200/70 p-4">
+              <div className="text-[11px] text-neutral-500">平均年収</div>
+              <div className="mt-1 text-lg font-medium text-neutral-950">
+                {formatSalaryRange(q.average_salary_min, q.average_salary_max)}
+              </div>
             </div>
           </div>
         </section>
@@ -235,7 +255,7 @@ export default async function QualificationPage({ params, searchParams }: Props)
         {benchmark && (
           <section className="border-t border-neutral-200/70 py-8">
             <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
-              {q.name_short}の難易度偏差値
+              {q.name_short}の難易度の目安
             </h2>
 
             <div className="rounded-lg border border-neutral-200/70 p-5">
@@ -266,11 +286,24 @@ export default async function QualificationPage({ params, searchParams }: Props)
                 </div>
               </div>
 
-              {benchmark.note && (
+              {(q.difficulty_reason_text || benchmark.note) && (
                 <div className="mt-5 border-t border-neutral-200/70 pt-4">
-                  <p className="mt-4 text-xs leading-6 text-neutral-500">
-                    {benchmark.note}
-                  </p>
+                  {q.difficulty_reason_text && (
+                    <div>
+                      <div className="text-sm font-semibold text-neutral-950">
+                        なぜこの難易度なのか
+                      </div>
+                      <p className="mt-3 text-sm leading-8 text-neutral-700">
+                        {q.difficulty_reason_text}
+                      </p>
+                    </div>
+                  )}
+
+                  {benchmark.note && (
+                    <p className="mt-4 text-xs leading-6 text-neutral-500">
+                      {benchmark.note}
+                    </p>
+                  )}
                 </div>
               )}
             </div>
@@ -379,33 +412,33 @@ export default async function QualificationPage({ params, searchParams }: Props)
 
         <QualificationMetricsSection metrics={metrics} />
 
-        <section className="border-t border-neutral-200/70 py-8">
-          <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
-            {q.name_short}の難易度
-          </h2>
-          <p className="text-sm leading-8 text-neutral-700">{q.difficulty_reason_text}</p>
-        </section>
 
         <section className="border-t border-neutral-200/70 py-8">
           <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
-            向いている人
+            向いている人・向いていない人
           </h2>
-          <ul className="list-disc space-y-2 pl-5 text-sm leading-7 text-neutral-700">
-            {splitLines(q.who_should_take).map((line) => (
-              <li key={line}>{line}</li>
-            ))}
-          </ul>
-        </section>
 
-        <section className="border-t border-neutral-200/70 py-8">
-          <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
-            向いていない人
-          </h2>
-          <ul className="list-disc space-y-2 pl-5 text-sm leading-7 text-neutral-700">
-            {splitLines(q.who_should_not_take).map((line) => (
-              <li key={line}>{line}</li>
-            ))}
-          </ul>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="rounded-lg border border-neutral-200/70 bg-white p-5">
+              <div className="text-sm font-semibold text-neutral-950">
+                向いている人
+              </div>
+
+              <p className="mt-3 whitespace-pre-line text-sm leading-7 text-neutral-600">
+                {q.who_should_take || "準備中です。"}
+              </p>
+            </div>
+
+            <div className="rounded-lg border border-neutral-200/70 bg-white p-5">
+              <div className="text-sm font-semibold text-neutral-950">
+                向いていない人
+              </div>
+
+              <p className="mt-3 whitespace-pre-line text-sm leading-7 text-neutral-600">
+                {q.who_should_not_take || "準備中です。"}
+              </p>
+            </div>
+          </div>
         </section>
 
         {quizItems.length > 0 && (

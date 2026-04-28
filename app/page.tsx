@@ -123,9 +123,9 @@ export default async function HomePage() {
                   </div>
 
                   <div className="shrink-0 text-right">
-                    <div className="text-[11px] text-neutral-500">難易度</div>
+                    <div className="text-[11px] text-neutral-500">難易度偏差値</div>
                     <div className="text-sm font-medium text-neutral-950">
-                      {scoreLabel(q.difficulty_score)}
+                      {scoreLabel(q.difficulty_deviation)}
                     </div>
                   </div>
                 </div>

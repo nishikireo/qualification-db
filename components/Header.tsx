@@ -9,7 +9,7 @@ export default function Header() {
         </Link>
 
         <nav className="flex items-center gap-6 text-sm text-neutral-600">
-          <Link href="/lists/difficulty" className="hover:text-neutral-950">
+          <Link href="/qualifications" className="hover:text-neutral-950">
             資格一覧
           </Link>
         </nav>
