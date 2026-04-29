@@ -1,6 +1,4 @@
-import { getQualificationBySlug } from "@/lib/data"
-
-type Qualification = NonNullable<Awaited<ReturnType<typeof getQualificationBySlug>>>
+import type { Qualification } from "@/types/qualification"
 
 type Props = {
   qualification: Qualification

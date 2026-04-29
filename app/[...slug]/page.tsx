@@ -4,8 +4,7 @@ import type { Metadata } from "next"
 import ReactMarkdown from "react-markdown"
 import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd"
 import { getStaticPages } from "@/lib/data"
-
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://open-shikaku.jp"
+import { siteName, siteUrl } from "@/lib/site"
 
 type Props = {
   params: Promise<{ slug?: string[] }>
@@ -48,7 +47,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: page.title,
-    description: `${page.title} | オープン資格`,
+    description: `${page.title} | ${siteName}`,
   }
 }
 

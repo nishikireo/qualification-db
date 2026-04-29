@@ -16,8 +16,7 @@ import {
   formatSalaryRange,
   formatYen,
 } from "@/lib/format"
-
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://open-shikaku.jp"
+import { siteName, siteUrl } from "@/lib/site"
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -123,7 +122,7 @@ export async function generateMetadata({ params }: Props) {
       comparison.search_intent_type,
       left.name_short,
       right.name_short
-    )} | オープン資格`,
+    )} | ${siteName}`,
     description: `${left.name_short}と${right.name_short}を、難易度偏差値、勉強時間、知識範囲の重複、追加学習時間、どちらを先に取るべきかで比較します。`,
   }
 }

@@ -4,9 +4,7 @@ import StructuredData from "@/components/StructuredData"
 import { GoogleTagManager } from "@next/third-parties/google"
 import Header from "@/components/Header"
 import Footer from "@/components/Footer"
-
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://open-shikaku.jp"
-const siteName = "オープン資格"
+import { siteName, siteUrl } from "@/lib/site"
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

@@ -1,7 +1,4 @@
-import type { DifficultyBenchmark } from "@/types/qualification"
-import { getQualificationBySlug } from "@/lib/data"
-
-type Qualification = NonNullable<Awaited<ReturnType<typeof getQualificationBySlug>>>
+import type { DifficultyBenchmark, Qualification } from "@/types/qualification"
 
 type Props = {
   qualification: Qualification

@@ -2,8 +2,7 @@ import Link from "next/link"
 import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd"
 import QualificationsSearchClient from "@/components/QualificationsSearchClient"
 import { getQualifications } from "@/lib/data"
-
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://open-shikaku.jp"
+import { siteName, siteUrl } from "@/lib/site"
 
 type Props = {
   searchParams?: Promise<{
@@ -12,7 +11,7 @@ type Props = {
 }
 
 export const metadata = {
-  title: "資格を探す｜難易度・勉強時間・合格率で検索 | オープン資格",
+  title: `資格を探す｜難易度・勉強時間・合格率で検索 | ${siteName}`,
   description:
     "資格を難易度、勉強時間、合格率、カテゴリ、独学しやすさ、受験料、平均年収などで検索・比較できます。自分に合った資格探しに役立つ資格データベースです。",
 }

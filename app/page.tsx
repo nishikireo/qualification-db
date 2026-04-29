@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { getQualifications } from "@/lib/data"
+import { getListPages, getQualifications } from "@/lib/data"
 import HomeQualificationSearch from "@/components/HomeQualificationSearch"
 import {
   formatHoursRange,
@@ -23,19 +23,17 @@ function getFeaturedQualifications<T extends { career_value_score: number | null
     .slice(0, 12)
 }
 
-const listLinks = [
-  { href: "/lists/difficulty", label: "難易度が高い資格一覧" },
-  { href: "/lists/self-study", label: "独学しやすい資格一覧" },
-  { href: "/lists/cost-performance", label: "コスパが高い資格一覧" },
-  { href: "/lists/no-eligibility", label: "受験資格なしの資格一覧" },
-  { href: "/lists/exclusive-work", label: "独占業務がある資格一覧" },
-  { href: "/lists/real-estate", label: "不動産資格一覧" },
-]
-
 export default async function HomePage() {
-  const qualifications = await getQualifications()
+  const [qualifications, listPages] = await Promise.all([
+    getQualifications(),
+    getListPages(),
+  ])
 
   const featured = getFeaturedQualifications(qualifications)
+  const listLinks = listPages.map((page) => ({
+    href: `/lists/${page.slug}`,
+    label: page.title,
+  }))
 
   return (
     <main className="bg-white">

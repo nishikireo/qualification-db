@@ -17,8 +17,7 @@ import {
   getQualificationExamSchedulesBySlug,
 } from "@/lib/data"
 import { formatSalaryRange } from "@/lib/format"
-
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://open-shikaku.jp"
+import { siteName, siteUrl } from "@/lib/site"
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -26,17 +25,6 @@ type Props = {
 }
 
 type SearchParamsRecord = Record<string, string | string[] | undefined>
-
-
-
-function splitLines(text: string | undefined) {
-  if (!text) return []
-  return text
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean)
-}
-
 
 function getSearchParamValue(
   value: string | string[] | undefined
@@ -121,7 +109,7 @@ export async function generateMetadata({ params }: Props) {
   if (!q) return {}
 
   return {
-    title: `${q.name_short}の難易度・偏差値・合格率・勉強時間 | オープン資格`,
+    title: `${q.name_short}の難易度・偏差値・合格率・勉強時間 | ${siteName}`,
     description: `${q.name_short}の難易度偏差値、合格率、勉強時間、受験料、平均年収、独学しやすさ、転職価値をデータで整理しています。`,
   }
 }

@@ -4,13 +4,11 @@ import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd"
 import { getListPageBySlug, getListPages, getQualifications } from "@/lib/data"
 import {
   formatHoursRange,
-  formatNumber,
   formatPercent,
   formatYen,
 } from "@/lib/format"
+import { siteName, siteUrl } from "@/lib/site"
 import type { Qualification } from "@/types/qualification"
-
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://open-shikaku.jp"
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -59,37 +57,42 @@ function getMetricDisplayValue(q: Qualification, metric: string) {
 function applySecondaryFilter(items: Qualification[], filter: string) {
   if (!filter || filter === "publish_flag=TRUE") return items
 
-  if (filter === "eligibility_text contains 制限なし") {
-    return items.filter((q) => q.eligibility_text.includes("制限なし"))
+  const containsMatch = filter.match(/^(\w+)\s+contains\s+(.+)$/)
+  if (containsMatch) {
+    const [, field, expected] = containsMatch
+    return items.filter((q) =>
+      String(q[field as keyof Qualification] ?? "").includes(expected)
+    )
   }
 
-  if (filter === "exclusive_work_flag=TRUE") {
-    return items.filter((q) => q.exclusive_work_flag)
+  const inMatch = filter.match(/^(\w+)\s+in\s+(.+)$/)
+  if (inMatch) {
+    const [, field, expectedValues] = inMatch
+    const values = expectedValues.split(",").map((value) => value.trim())
+
+    return items.filter((q) =>
+      values.includes(String(q[field as keyof Qualification] ?? ""))
+    )
   }
 
-  if (filter === "category_primary=不動産") {
-    return items.filter((q) => q.category_primary === "不動産")
-  }
+  const equalsMatch = filter.match(/^(\w+)=(.+)$/)
+  if (equalsMatch) {
+    const [, field, expected] = equalsMatch
 
-  if (filter === "category_primary=IT") {
-    return items.filter((q) => q.category_primary === "IT")
-  }
-
-  if (filter === "category_primary=法律") {
-    return items.filter((q) => q.category_primary === "法律")
-  }
-
-  if (filter === "category_primary=医療福祉") {
-    return items.filter((q) => q.category_primary === "医療福祉")
-  }
-
-  if (filter === "category_primary in 金融,会計") {
     return items.filter(
-      (q) => q.category_primary === "金融" || q.category_primary === "会計"
+      (q) =>
+        qValueToFilterString(q[field as keyof Qualification]) ===
+        expected.trim()
     )
   }
 
   return items
+}
+
+function qValueToFilterString(value: Qualification[keyof Qualification]) {
+  if (value === undefined || value === null) return undefined
+  if (typeof value === "boolean") return value ? "TRUE" : "FALSE"
+  return String(value)
 }
 
 export async function generateStaticParams() {
@@ -107,7 +110,7 @@ export async function generateMetadata({ params }: Props) {
   if (!page) return {}
 
   return {
-    title: `${page.title} | オープン資格`,
+    title: `${page.title} | ${siteName}`,
     description: page.description,
   }
 }

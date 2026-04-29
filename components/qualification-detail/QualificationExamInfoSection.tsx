@@ -3,16 +3,10 @@ import {
   formatDateRangeJa,
   textOrDash,
 } from "@/lib/format"
-import {
-  getQualificationBySlug,
-  getQualificationExamSchedulesBySlug,
-} from "@/lib/data"
-
-type Qualification = NonNullable<Awaited<ReturnType<typeof getQualificationBySlug>>>
-
-type QualificationExamSchedule = Awaited<
-  ReturnType<typeof getQualificationExamSchedulesBySlug>
->[number]
+import type {
+  Qualification,
+  QualificationExamSchedule,
+} from "@/types/qualification"
 
 type Props = {
   qualification: Qualification
