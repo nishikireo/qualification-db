@@ -1,6 +1,8 @@
 import {
   formatDateJa,
   formatDateRangeJa,
+  formatSalaryRange,
+  formatYen,
   textOrDash,
 } from "@/lib/format"
 import type {
@@ -19,23 +21,30 @@ export default function QualificationExamInfoSection({
 }: Props) {
   const nextSchedule = schedules[0]
 
-  const hasMasterInfo = Boolean(
-    qualification.passing_criteria_text ||
+  const hasExamInfo = Boolean(
+    qualification.name_ja ||
+      qualification.issuing_body ||
+      qualification.qualification_type ||
+      qualification.exam_frequency_text ||
+      qualification.eligibility_text ||
+      qualification.exam_format_text ||
+      qualification.exam_fee_tax_included != null ||
+      qualification.passing_criteria_text ||
       qualification.application_period_summary ||
       qualification.exam_schedule_summary ||
       qualification.test_location_summary
   )
 
-  if (!hasMasterInfo && schedules.length === 0) return null
+  if (!hasExamInfo && schedules.length === 0) return null
 
   return (
     <section className="border-t border-neutral-200/70 py-8">
       <div className="mb-5">
         <h2 className="text-lg font-semibold tracking-tight text-neutral-950">
-          試験情報
+          試験概要
         </h2>
         <p className="mt-2 text-sm leading-7 text-neutral-600">
-          合格基準、申込期間、試験日程、受験地の目安をまとめています。
+          受験資格、試験形式、合格基準、日程、受験料、主催団体をまとめています。
         </p>
       </div>
 
@@ -120,6 +129,75 @@ export default function QualificationExamInfoSection({
         </div>
       )}
 
+      <div className="mb-5 overflow-x-auto rounded-lg border border-neutral-200/70">
+        <table className="w-full border-collapse text-sm">
+          <tbody>
+            <tr className="border-b border-neutral-200/70">
+              <th className="w-40 bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
+                正式名称
+              </th>
+              <td className="px-4 py-3 text-neutral-900">{qualification.name_ja}</td>
+            </tr>
+
+            <tr className="border-b border-neutral-200/70">
+              <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
+                主催
+              </th>
+              <td className="px-4 py-3 text-neutral-900">{qualification.issuing_body}</td>
+            </tr>
+
+            <tr className="border-b border-neutral-200/70">
+              <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
+                種別
+              </th>
+              <td className="px-4 py-3 text-neutral-900">{qualification.qualification_type}</td>
+            </tr>
+
+            <tr className="border-b border-neutral-200/70">
+              <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
+                試験回数
+              </th>
+              <td className="px-4 py-3 text-neutral-900">{qualification.exam_frequency_text}</td>
+            </tr>
+
+            <tr className="border-b border-neutral-200/70">
+              <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
+                受験資格
+              </th>
+              <td className="px-4 py-3 text-neutral-900">{qualification.eligibility_text}</td>
+            </tr>
+
+            <tr className="border-b border-neutral-200/70">
+              <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
+                試験形式
+              </th>
+              <td className="px-4 py-3 text-neutral-900">{qualification.exam_format_text}</td>
+            </tr>
+
+            <tr className="border-b border-neutral-200/70">
+              <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
+                受験料
+              </th>
+              <td className="px-4 py-3 text-neutral-900">
+                {formatYen(qualification.exam_fee_tax_included)}
+              </td>
+            </tr>
+
+            <tr>
+              <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
+                平均年収
+              </th>
+              <td className="px-4 py-3 text-neutral-900">
+                {formatSalaryRange(
+                  qualification.average_salary_min,
+                  qualification.average_salary_max
+                )}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
       <div className="grid gap-3 md:grid-cols-2">
         <div className="rounded-lg border border-neutral-200/70 p-5">
           <div className="text-sm font-semibold text-neutral-950">合格基準</div>
@@ -154,16 +232,73 @@ export default function QualificationExamInfoSection({
         </div>
       </div>
 
-      {qualification.source_schedule_url && (
-        <div className="mt-4">
-          <a
-            href={qualification.source_schedule_url}
-            target="_blank"
-            rel="noreferrer"
-            className="text-sm text-neutral-600 underline hover:text-neutral-950"
-          >
-            公式の試験情報を見る
-          </a>
+      {(qualification.official_site_url ||
+        qualification.official_exam_guide_url ||
+        qualification.source_schedule_url ||
+        qualification.source_eligibility_url ||
+        qualification.source_fee_url ||
+        qualification.source_average_salary_url) && (
+        <div className="mt-4 flex flex-wrap gap-3 text-sm">
+          {qualification.official_site_url && (
+            <a
+              href={qualification.official_site_url}
+              target="_blank"
+              rel="noreferrer"
+              className="text-neutral-600 underline hover:text-neutral-950"
+            >
+              公式サイト
+            </a>
+          )}
+          {qualification.official_exam_guide_url && (
+            <a
+              href={qualification.official_exam_guide_url}
+              target="_blank"
+              rel="noreferrer"
+              className="text-neutral-600 underline hover:text-neutral-950"
+            >
+              公式の試験案内
+            </a>
+          )}
+          {qualification.source_schedule_url && (
+            <a
+              href={qualification.source_schedule_url}
+              target="_blank"
+              rel="noreferrer"
+              className="text-neutral-600 underline hover:text-neutral-950"
+            >
+              日程の出典
+            </a>
+          )}
+          {qualification.source_eligibility_url && (
+            <a
+              href={qualification.source_eligibility_url}
+              target="_blank"
+              rel="noreferrer"
+              className="text-neutral-600 underline hover:text-neutral-950"
+            >
+              受験資格の出典
+            </a>
+          )}
+          {qualification.source_fee_url && (
+            <a
+              href={qualification.source_fee_url}
+              target="_blank"
+              rel="noreferrer"
+              className="text-neutral-600 underline hover:text-neutral-950"
+            >
+              受験料の出典
+            </a>
+          )}
+          {qualification.source_average_salary_url && (
+            <a
+              href={qualification.source_average_salary_url}
+              target="_blank"
+              rel="noreferrer"
+              className="text-neutral-600 underline hover:text-neutral-950"
+            >
+              年収情報の出典
+            </a>
+          )}
         </div>
       )}
     </section>

@@ -2,10 +2,12 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd"
 import QualificationMetricsSection from "@/components/QualificationMetricsSection"
-import BasicIndicatorsSection from "@/components/qualification-detail/BasicIndicatorsSection"
+import StructuredData from "@/components/StructuredData"
 import DifficultyBenchmarkSection from "@/components/qualification-detail/DifficultyBenchmarkSection"
 import FitSection from "@/components/qualification-detail/FitSection"
 import QualificationExamInfoSection from "@/components/qualification-detail/QualificationExamInfoSection"
+import QualificationHeroSection from "@/components/qualification-detail/QualificationHeroSection"
+import StudyPlanSection from "@/components/qualification-detail/StudyPlanSection"
 import {
   getDifficultyBenchmarkByDeviation,
   getQualificationBySlug,
@@ -16,7 +18,6 @@ import {
   getQualifications,
   getQualificationExamSchedulesBySlug,
 } from "@/lib/data"
-import { formatSalaryRange } from "@/lib/format"
 import { siteName, siteUrl } from "@/lib/site"
 
 type Props = {
@@ -109,8 +110,8 @@ export async function generateMetadata({ params }: Props) {
   if (!q) return {}
 
   return {
-    title: `${q.name_short}の難易度・偏差値・合格率・勉強時間 | ${siteName}`,
-    description: `${q.name_short}の難易度偏差値、合格率、勉強時間、受験料、平均年収、独学しやすさ、転職価値をデータで整理しています。`,
+    title: `${q.name_short}とは？難易度・合格率・勉強時間・試験日程`,
+    description: `${q.name_short}の難易度、合格率、勉強時間、受験料、試験日程、受験資格、向いている人を公式情報と公開データをもとに整理しています。`,
   }
 }
 
@@ -119,7 +120,7 @@ export default async function QualificationPage({ params, searchParams }: Props)
   const resolvedSearchParams = (await searchParams) ?? {}
   const q = await getQualificationBySlug(slug)
   if (!q) notFound()
-  
+
   const [
     comparisons,
     metrics,
@@ -142,6 +143,40 @@ export default async function QualificationPage({ params, searchParams }: Props)
     allQualifications,
     q
   )
+  const nextSchedule = examSchedules[0]
+  const pageUrl = `${siteUrl}/qualifications/${q.slug}`
+  const qualificationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "@id": `${pageUrl}#webpage`,
+    url: pageUrl,
+    name: `${q.name_short}とは？難易度・合格率・勉強時間・試験日程`,
+    description: q.summary_short,
+    dateModified: q.last_verified_at || undefined,
+    isPartOf: {
+      "@type": "WebSite",
+      name: siteName,
+      url: siteUrl,
+    },
+    about: {
+      "@type": "EducationalOccupationalCredential",
+      name: q.name_ja,
+      alternateName: q.name_short,
+      credentialCategory: q.qualification_type,
+      recognizedBy: q.issuing_body
+        ? {
+            "@type": "Organization",
+            name: q.issuing_body,
+          }
+        : undefined,
+      url: q.official_site_url || undefined,
+      sameAs: [
+        q.official_site_url,
+        q.official_exam_guide_url,
+        q.source_schedule_url,
+      ].filter(Boolean),
+    },
+  }
 
   return (
     <main className="bg-white">
@@ -152,6 +187,7 @@ export default async function QualificationPage({ params, searchParams }: Props)
           { name: q.name_short, item: `${siteUrl}/qualifications/${q.slug}` },
         ]}
       />
+      <StructuredData data={qualificationJsonLd} />
 
       <div className="mx-auto max-w-4xl px-6 py-10">
         <nav className="mb-6 text-sm text-neutral-500">
@@ -172,128 +208,24 @@ export default async function QualificationPage({ params, searchParams }: Props)
           </ol>
         </nav>
 
-        <header className="border-b border-neutral-200/70 pb-8">
-          <div className="text-sm text-neutral-500">{q.category_primary}</div>
-          <h1 className="mt-2 text-4xl font-semibold tracking-tight text-neutral-950">
-            {q.name_short}の難易度・偏差値・合格率・勉強時間まとめ
-          </h1>
-          <p className="mt-4 max-w-3xl text-base leading-7 text-neutral-600">
-            {q.summary_short}
-          </p>
-        </header>
+        <QualificationHeroSection
+          qualification={q}
+          benchmark={benchmark}
+          nextSchedule={nextSchedule}
+        />
 
-        <BasicIndicatorsSection qualification={q} benchmark={benchmark} />
+        <FitSection qualification={q} />
 
         <DifficultyBenchmarkSection qualification={q} benchmark={benchmark} />
-
-        <section className="border-t border-neutral-200/70 py-8">
-          <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
-            基本情報
-          </h2>
-          <div className="overflow-x-auto rounded-lg border border-neutral-200/70">
-            <table className="w-full border-collapse text-sm">
-              <tbody>
-                <tr className="border-b border-neutral-200/70">
-                  <th className="w-40 bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
-                    資格名
-                  </th>
-                  <td className="px-4 py-3 text-neutral-900">{q.name_ja}</td>
-                </tr>
-
-                <tr className="border-b border-neutral-200/70">
-                  <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
-                    カテゴリ
-                  </th>
-                  <td className="px-4 py-3 text-neutral-900">{q.category_primary}</td>
-                </tr>
-
-                <tr className="border-b border-neutral-200/70">
-                  <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
-                    種別
-                  </th>
-                  <td className="px-4 py-3 text-neutral-900">{q.qualification_type}</td>
-                </tr>
-
-                <tr className="border-b border-neutral-200/70">
-                  <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
-                    主催
-                  </th>
-                  <td className="px-4 py-3 text-neutral-900">{q.issuing_body}</td>
-                </tr>
-
-                <tr className="border-b border-neutral-200/70">
-                  <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
-                    試験回数
-                  </th>
-                  <td className="px-4 py-3 text-neutral-900">{q.exam_frequency_text}</td>
-                </tr>
-
-                <tr className="border-b border-neutral-200/70">
-                  <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
-                    受験資格
-                  </th>
-                  <td className="px-4 py-3 text-neutral-900">{q.eligibility_text}</td>
-                </tr>
-
-                <tr className="border-b border-neutral-200/70">
-                  <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
-                    試験形式
-                  </th>
-                  <td className="px-4 py-3 text-neutral-900">{q.exam_format_text}</td>
-                </tr>
-
-                <tr className="border-b border-neutral-200/70">
-                  <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
-                    難易度偏差値
-                  </th>
-                  <td className="px-4 py-3 text-neutral-900">
-                    {q.difficulty_deviation ?? "-"}
-                  </td>
-                </tr>
-
-                <tr className="border-b border-neutral-200/70">
-                  <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
-                    難易度帯
-                  </th>
-                  <td className="px-4 py-3 text-neutral-900">
-                    {benchmark?.band_label ?? "-"}
-                  </td>
-                </tr>
-
-                <tr className="border-b border-neutral-200/70">
-                  <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
-                    大学群の目安
-                  </th>
-                  <td className="px-4 py-3 text-neutral-900">
-                    {benchmark?.university_group ?? "-"}
-                    {benchmark?.university_examples
-                      ? `（${benchmark.university_examples}）`
-                      : ""}
-                  </td>
-                </tr>
-
-                <tr>
-                  <th className="bg-neutral-50 px-4 py-3 text-left font-medium text-neutral-600">
-                    平均年収
-                  </th>
-                  <td className="px-4 py-3 text-neutral-900">
-                    {formatSalaryRange(q.average_salary_min, q.average_salary_max)}
-                    {q.average_salary_note ? `（${q.average_salary_note}）` : ""}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
 
         <QualificationExamInfoSection
           qualification={q}
           schedules={examSchedules}
         />
+
+        <StudyPlanSection qualification={q} />
+
         <QualificationMetricsSection metrics={metrics} />
-
-
-        <FitSection qualification={q} />
 
         {quizItems.length > 0 && (
           <section className="border-t border-neutral-200/70 py-8">
@@ -492,6 +424,30 @@ export default async function QualificationPage({ params, searchParams }: Props)
                   className="underline hover:text-neutral-950"
                 >
                   受験資格の出典
+                </a>
+              </li>
+            )}
+            {q.source_schedule_url && (
+              <li>
+                <a
+                  href={q.source_schedule_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline hover:text-neutral-950"
+                >
+                  試験日程の出典
+                </a>
+              </li>
+            )}
+            {q.source_average_salary_url && (
+              <li>
+                <a
+                  href={q.source_average_salary_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline hover:text-neutral-950"
+                >
+                  年収情報の出典
                 </a>
               </li>
             )}
