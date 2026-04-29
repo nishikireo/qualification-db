@@ -1,6 +1,11 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd"
+import QualificationMetricsSection from "@/components/QualificationMetricsSection"
+import BasicIndicatorsSection from "@/components/qualification-detail/BasicIndicatorsSection"
+import DifficultyBenchmarkSection from "@/components/qualification-detail/DifficultyBenchmarkSection"
+import FitSection from "@/components/qualification-detail/FitSection"
+import QualificationExamInfoSection from "@/components/qualification-detail/QualificationExamInfoSection"
 import {
   getDifficultyBenchmarkByDeviation,
   getQualificationBySlug,
@@ -11,13 +16,7 @@ import {
   getQualifications,
   getQualificationExamSchedulesBySlug,
 } from "@/lib/data"
-import QualificationMetricsSection from "@/components/QualificationMetricsSection"
-import {
-  formatDateJa,
-  formatDateRangeJa,
-  formatSalaryRange,
-  textOrDash,
-} from "@/lib/format"
+import { formatSalaryRange } from "@/lib/format"
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://open-shikaku.jp"
 
@@ -28,171 +27,7 @@ type Props = {
 
 type SearchParamsRecord = Record<string, string | string[] | undefined>
 
-type QualificationExamSchedule = Awaited<
-  ReturnType<typeof getQualificationExamSchedulesBySlug>
->[number]
 
-
-
-function QualificationExamInfoSection({
-  qualification,
-  schedules,
-}: {
-  qualification: NonNullable<Awaited<ReturnType<typeof getQualificationBySlug>>>
-  schedules: QualificationExamSchedule[]
-}) {
-  const nextSchedule = schedules[0]
-
-  const hasMasterInfo = Boolean(
-    qualification.passing_criteria_text ||
-      qualification.application_period_summary ||
-      qualification.exam_schedule_summary ||
-      qualification.test_location_summary
-  )
-
-  if (!hasMasterInfo && schedules.length === 0) return null
-
-  return (
-    <section className="border-t border-neutral-200/70 py-8">
-      <div className="mb-5">
-        <h2 className="text-lg font-semibold tracking-tight text-neutral-950">
-          試験情報
-        </h2>
-        <p className="mt-2 text-sm leading-7 text-neutral-600">
-          合格基準、申込期間、試験日程、受験地の目安をまとめています。
-        </p>
-      </div>
-
-      {nextSchedule && (
-        <div className="mb-5 rounded-lg border border-neutral-200/70 p-5">
-          <div className="text-sm font-semibold text-neutral-950">
-            次回・最新の試験日程
-          </div>
-
-          <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
-            <div className="rounded-md bg-neutral-50 p-3">
-              <div className="text-[11px] text-neutral-500">対象</div>
-              <div className="mt-1 text-sm font-semibold leading-6 text-neutral-950">
-                {nextSchedule.exam_period_label || nextSchedule.exam_year || "-"}
-              </div>
-            </div>
-
-            <div className="rounded-md bg-neutral-50 p-3">
-              <div className="text-[11px] text-neutral-500">申込期間</div>
-              <div className="mt-1 text-sm font-semibold leading-6 text-neutral-950">
-                {formatDateRangeJa(
-                  nextSchedule.application_start_date,
-                  nextSchedule.application_end_date
-                )}
-              </div>
-            </div>
-
-            <div className="rounded-md bg-neutral-50 p-3">
-              <div className="text-[11px] text-neutral-500">試験日程</div>
-              <div className="mt-1 text-sm font-semibold leading-6 text-neutral-950">
-                {formatDateRangeJa(
-                  nextSchedule.exam_start_date,
-                  nextSchedule.exam_end_date
-                )}
-              </div>
-            </div>
-
-            <div className="rounded-md bg-neutral-50 p-3">
-              <div className="text-[11px] text-neutral-500">合格発表</div>
-              <div className="mt-1 text-sm font-semibold leading-6 text-neutral-950">
-                {nextSchedule.result_date
-                  ? formatDateJa(nextSchedule.result_date)
-                  : "-"}
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-4 grid gap-3 md:grid-cols-2">
-            <div className="rounded-md bg-neutral-50 p-3">
-              <div className="text-[11px] text-neutral-500">受験地</div>
-              <div className="mt-1 text-sm font-semibold leading-6 text-neutral-950">
-                {textOrDash(nextSchedule.test_locations)}
-              </div>
-            </div>
-
-            <div className="rounded-md bg-neutral-50 p-3">
-              <div className="text-[11px] text-neutral-500">確認日</div>
-              <div className="mt-1 text-sm font-semibold leading-6 text-neutral-950">
-                {nextSchedule.checked_at
-                  ? formatDateJa(nextSchedule.checked_at)
-                  : "-"}
-              </div>
-            </div>
-          </div>
-
-          {nextSchedule.notes && (
-            <p className="mt-4 text-xs leading-6 text-neutral-500">
-              {nextSchedule.notes}
-            </p>
-          )}
-
-          {nextSchedule.source_url && (
-            <a
-              href={nextSchedule.source_url}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-4 inline-flex text-sm text-neutral-600 underline hover:text-neutral-950"
-            >
-              公式の日程情報を見る
-            </a>
-          )}
-        </div>
-      )}
-
-      <div className="grid gap-3 md:grid-cols-2">
-        <div className="rounded-lg border border-neutral-200/70 p-5">
-          <div className="text-sm font-semibold text-neutral-950">合格基準</div>
-          <p className="mt-3 text-sm leading-7 text-neutral-700">
-            {textOrDash(qualification.passing_criteria_text)}
-          </p>
-        </div>
-
-        <div className="rounded-lg border border-neutral-200/70 p-5">
-          <div className="text-sm font-semibold text-neutral-950">
-            申込期間の目安
-          </div>
-          <p className="mt-3 text-sm leading-7 text-neutral-700">
-            {textOrDash(qualification.application_period_summary)}
-          </p>
-        </div>
-
-        <div className="rounded-lg border border-neutral-200/70 p-5">
-          <div className="text-sm font-semibold text-neutral-950">
-            試験日程の目安
-          </div>
-          <p className="mt-3 text-sm leading-7 text-neutral-700">
-            {textOrDash(qualification.exam_schedule_summary)}
-          </p>
-        </div>
-
-        <div className="rounded-lg border border-neutral-200/70 p-5">
-          <div className="text-sm font-semibold text-neutral-950">受験地</div>
-          <p className="mt-3 text-sm leading-7 text-neutral-700">
-            {textOrDash(qualification.test_location_summary)}
-          </p>
-        </div>
-      </div>
-
-      {qualification.source_schedule_url && (
-        <div className="mt-4">
-          <a
-            href={qualification.source_schedule_url}
-            target="_blank"
-            rel="noreferrer"
-            className="text-sm text-neutral-600 underline hover:text-neutral-950"
-          >
-            公式の試験情報を見る
-          </a>
-        </div>
-      )}
-    </section>
-  )
-}
 
 function splitLines(text: string | undefined) {
   if (!text) return []
@@ -359,125 +194,9 @@ export default async function QualificationPage({ params, searchParams }: Props)
           </p>
         </header>
 
-        <section className="py-8">
-          <div className="mb-5">
-            <h2 className="text-lg font-semibold tracking-tight text-neutral-950">
-              基本指標
-            </h2>
-            <p className="mt-2 text-sm leading-7 text-neutral-600">
-              難易度偏差値、合格率、勉強時間、受験料、平均年収の目安をまとめています。
-            </p>
-          </div>
+        <BasicIndicatorsSection qualification={q} benchmark={benchmark} />
 
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-            <div className="rounded-lg border border-neutral-200/70 p-4">
-              <div className="text-[11px] text-neutral-500">難易度偏差値</div>
-              <div className="mt-1 text-lg font-medium text-neutral-950">
-                {q.difficulty_deviation ?? "-"}
-              </div>
-              {benchmark?.band_label && (
-                <div className="mt-1 text-xs text-neutral-500">
-                  {benchmark.band_label}
-                </div>
-              )}
-            </div>
-
-            <div className="rounded-lg border border-neutral-200/70 p-4">
-              <div className="text-[11px] text-neutral-500">合格率</div>
-              <div className="mt-1 text-lg font-medium text-neutral-950">
-                {q.pass_rate_latest !== null && q.pass_rate_latest !== undefined
-                  ? `${q.pass_rate_latest}%`
-                  : "-"}
-              </div>
-            </div>
-
-            <div className="rounded-lg border border-neutral-200/70 p-4">
-              <div className="text-[11px] text-neutral-500">勉強時間</div>
-              <div className="mt-1 text-lg font-medium text-neutral-950">
-                {q.study_hours_min !== null &&
-                q.study_hours_min !== undefined &&
-                q.study_hours_max !== null &&
-                q.study_hours_max !== undefined
-                  ? `${q.study_hours_min}〜${q.study_hours_max}時間`
-                  : "-"}
-              </div>
-            </div>
-
-            <div className="rounded-lg border border-neutral-200/70 p-4">
-              <div className="text-[11px] text-neutral-500">受験料</div>
-              <div className="mt-1 text-lg font-medium text-neutral-950">
-                {q.exam_fee_tax_included !== null && q.exam_fee_tax_included !== undefined
-                  ? `${q.exam_fee_tax_included.toLocaleString()}円`
-                  : "-"}
-              </div>
-            </div>
-
-            <div className="rounded-lg border border-neutral-200/70 p-4">
-              <div className="text-[11px] text-neutral-500">平均年収</div>
-              <div className="mt-1 text-lg font-medium text-neutral-950">
-                {formatSalaryRange(q.average_salary_min, q.average_salary_max)}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {benchmark && (
-          <section className="border-t border-neutral-200/70 py-8">
-            <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
-              {q.name_short}の難易度の目安
-            </h2>
-
-            <div className="rounded-lg border border-neutral-200/70 p-5">
-              <div className="grid gap-4 md:grid-cols-3">
-                <div>
-                  <div className="text-[11px] text-neutral-500">資格難易度偏差値</div>
-                  <div className="mt-1 text-2xl font-semibold text-neutral-950">
-                    {q.difficulty_deviation ?? "-"}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-[11px] text-neutral-500">難易度帯</div>
-                  <div className="mt-1 text-base font-medium text-neutral-950">
-                    {benchmark.band_label}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-[11px] text-neutral-500">大学群の目安</div>
-                  <div className="mt-1 text-base font-medium text-neutral-950">
-                    {benchmark.university_group}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-[11px] text-neutral-500">大学例</div>
-                  <div className="mt-1 text-base font-medium text-neutral-950">
-                    {benchmark.university_examples}
-                  </div>
-                </div>
-              </div>
-
-              {(q.difficulty_reason_text || benchmark.note) && (
-                <div className="mt-5 border-t border-neutral-200/70 pt-4">
-                  {q.difficulty_reason_text && (
-                    <div>
-                      <div className="text-sm font-semibold text-neutral-950">
-                        なぜこの難易度なのか
-                      </div>
-                      <p className="mt-3 text-sm leading-8 text-neutral-700">
-                        {q.difficulty_reason_text}
-                      </p>
-                    </div>
-                  )}
-
-                  {benchmark.note && (
-                    <p className="mt-4 text-xs leading-6 text-neutral-500">
-                      {benchmark.note}
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-          </section>
-        )}
+        <DifficultyBenchmarkSection qualification={q} benchmark={benchmark} />
 
         <section className="border-t border-neutral-200/70 py-8">
           <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
@@ -586,33 +305,7 @@ export default async function QualificationPage({ params, searchParams }: Props)
         <QualificationMetricsSection metrics={metrics} />
 
 
-        <section className="border-t border-neutral-200/70 py-8">
-          <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
-            向いている人・向いていない人
-          </h2>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-lg border border-neutral-200/70 bg-white p-5">
-              <div className="text-sm font-semibold text-neutral-950">
-                向いている人
-              </div>
-
-              <p className="mt-3 whitespace-pre-line text-sm leading-7 text-neutral-600">
-                {q.who_should_take || "準備中です。"}
-              </p>
-            </div>
-
-            <div className="rounded-lg border border-neutral-200/70 bg-white p-5">
-              <div className="text-sm font-semibold text-neutral-950">
-                向いていない人
-              </div>
-
-              <p className="mt-3 whitespace-pre-line text-sm leading-7 text-neutral-600">
-                {q.who_should_not_take || "準備中です。"}
-              </p>
-            </div>
-          </div>
-        </section>
+        <FitSection qualification={q} />
 
         {quizItems.length > 0 && (
           <section className="border-t border-neutral-200/70 py-8">
