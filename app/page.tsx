@@ -13,6 +13,9 @@ export const metadata = {
   title: "オープン資格",
   description:
     "資格の難易度、合格率、勉強時間、受験料、独学しやすさ、転職価値をデータで比較する。",
+  alternates: {
+    canonical: "/",
+  },
 }
 
 function getFeaturedQualifications<T extends { career_value_score: number | null | undefined }>(

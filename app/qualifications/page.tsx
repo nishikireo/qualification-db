@@ -14,6 +14,9 @@ export const metadata = {
   title: `資格を探す｜難易度・勉強時間・合格率で検索 | ${siteName}`,
   description:
     "資格を難易度、勉強時間、合格率、カテゴリ、独学しやすさ、受験料、平均年収などで検索・比較できます。自分に合った資格探しに役立つ資格データベースです。",
+  alternates: {
+    canonical: "/qualifications",
+  },
 }
 
 export default async function QualificationsPage({ searchParams }: Props) {

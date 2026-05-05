@@ -112,6 +112,9 @@ export async function generateMetadata({ params }: Props) {
   return {
     title: `${page.title} | ${siteName}`,
     description: page.description,
+    alternates: {
+      canonical: `/lists/${page.slug}`,
+    },
   }
 }
 

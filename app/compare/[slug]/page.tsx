@@ -128,6 +128,9 @@ export async function generateMetadata({ params }: Props) {
       right.name_short
     )} | ${siteName}`,
     description: `${left.name_short}と${right.name_short}を、難易度偏差値、勉強時間、知識範囲の重複、追加学習時間、どちらを先に取るべきかで比較します。`,
+    alternates: {
+      canonical: `/compare/${comparison.comparison_slug}`,
+    },
   }
 }
 

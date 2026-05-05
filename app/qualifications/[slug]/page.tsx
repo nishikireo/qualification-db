@@ -112,6 +112,9 @@ export async function generateMetadata({ params }: Props) {
   return {
     title: `${q.name_short}とは？難易度・合格率・勉強時間・試験日程`,
     description: `${q.name_short}の難易度、合格率、勉強時間、受験料、試験日程、受験資格、向いている人を公式情報と公開データをもとに整理しています。`,
+    alternates: {
+      canonical: `/qualifications/${q.slug}`,
+    },
   }
 }
 
