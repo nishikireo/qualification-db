@@ -186,3 +186,44 @@ export type QualificationExamSchedule = {
   publish_flag: boolean
   notes: string
 }
+
+export type ComparisonLearningGap = {
+  comparison_slug: string
+  direction: "left_to_right" | "right_to_left" | string
+  from_qualification_slug: string
+  to_qualification_slug: string
+  gap_label: string
+  gap_category: string
+  reuse_level: "high" | "medium" | "low" | string
+  gap_level: "high" | "medium" | "low" | string
+  estimated_extra_hours_min: number | null
+  estimated_extra_hours_max: number | null
+  study_note: string
+  display_order: number | null
+  publish_flag: boolean
+}
+
+export type ComparisonQuestionPair = {
+  comparison_slug: string
+  pair_id: string
+  topic_label: string
+  comparison_type: string
+
+  left_qualification_slug: string
+  left_question_title: string
+  left_question_text: string
+  left_answer_summary: string
+
+  right_qualification_slug: string
+  right_question_title: string
+  right_question_text: string
+  right_answer_summary: string
+
+  difference_summary: string
+  left_difficulty: "easy" | "standard" | "hard" | string
+  right_difficulty: "easy" | "standard" | "hard" | string
+
+  display_order: number | null
+  source_note: string
+  publish_flag: boolean
+}

@@ -35,18 +35,22 @@ async function main() {
 
   const response = await sheets.spreadsheets.values.batchGet({
     spreadsheetId,
-    ranges: [
-      "qualifications_master!A:ZZ",
-      "qualification_metrics!A:ZZ",
-      "qualification_exam_schedules!A:ZZ",
-      "qualification_resource_links!A:ZZ",
-      "qualification_quiz_items!A:ZZ",
-      "difficulty_benchmark_master!A:ZZ",
-      "qualification_comparisons!A:ZZ",
-      "list_pages!A:ZZ",
-      "site_pages!A:ZZ",
-      "settings!A:ZZ",
-    ],
+      ranges: [
+        "qualifications_master!A:ZZ",
+        "qualification_metrics!A:ZZ",
+        "qualification_exam_schedules!A:ZZ",
+        "qualification_resource_links!A:ZZ",
+        "qualification_quiz_items!A:ZZ",
+        "difficulty_benchmark_master!A:ZZ",
+        "qualification_comparisons!A:ZZ",
+
+        "comparison_learning_gaps!A:ZZ",
+        "comparison_question_pairs!A:ZZ",
+
+        "list_pages!A:ZZ",
+        "site_pages!A:ZZ",
+        "settings!A:ZZ",
+      ],
   })
 
   const ranges = response.data.valueRanges ?? []
@@ -65,6 +69,10 @@ async function main() {
     qualification_quiz_items: rowsToObjects(getRangeValues("qualification_quiz_items")),
     difficulty_benchmark_master: rowsToObjects(getRangeValues("difficulty_benchmark_master")),
     qualification_comparisons: rowsToObjects(getRangeValues("qualification_comparisons")),
+
+    comparison_learning_gaps: rowsToObjects(getRangeValues("comparison_learning_gaps")),
+    comparison_question_pairs: rowsToObjects(getRangeValues("comparison_question_pairs")),
+
     list_pages: rowsToObjects(getRangeValues("list_pages")),
     site_pages: rowsToObjects(getRangeValues("site_pages")),
     settings: rowsToObjects(getRangeValues("settings")),

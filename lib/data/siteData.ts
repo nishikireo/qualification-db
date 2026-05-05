@@ -13,6 +13,10 @@ export type SiteDataFile = {
   qualification_quiz_items: RawRow[]
   difficulty_benchmark_master: RawRow[]
   qualification_comparisons: RawRow[]
+
+  comparison_learning_gaps?: RawRow[]
+  comparison_question_pairs?: RawRow[]
+
   list_pages: RawRow[]
   site_pages: RawRow[]
   settings: RawRow[]

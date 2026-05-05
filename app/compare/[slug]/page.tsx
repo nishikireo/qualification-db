@@ -2,7 +2,11 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd"
 import StructuredData from "@/components/StructuredData"
+import ComparisonLearningGapsSection from "@/components/compare/ComparisonLearningGapsSection"
+import ComparisonQuestionPairsSection from "@/components/compare/ComparisonQuestionPairsSection"
 import {
+  getComparisonLearningGapsBySlug,
+  getComparisonQuestionPairsBySlug,
   getDifficultyBenchmarkByDeviation,
   getQualificationComparisonBySlug,
   getQualificationComparisons,
@@ -130,10 +134,13 @@ export async function generateMetadata({ params }: Props) {
 export default async function ComparePage({ params }: Props) {
   const { slug } = await params
 
-  const [comparison, qualifications] = await Promise.all([
-    getQualificationComparisonBySlug(slug),
-    getQualifications(),
-  ])
+  const [comparison, qualifications, learningGaps, questionPairs] =
+    await Promise.all([
+      getQualificationComparisonBySlug(slug),
+      getQualifications(),
+      getComparisonLearningGapsBySlug(slug),
+      getComparisonQuestionPairsBySlug(slug),
+    ])
 
   if (!comparison) notFound()
 
@@ -446,6 +453,18 @@ export default async function ComparePage({ params }: Props) {
           </div>
         </section>
 
+        <ComparisonQuestionPairsSection
+          items={questionPairs}
+          left={left}
+          right={right}
+        />
+
+        <ComparisonLearningGapsSection
+          items={learningGaps}
+          left={left}
+          right={right}
+        />
+
         <section className="border-t border-neutral-200/70 py-8">
           <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
             すでに片方を持っている場合の追加学習時間
@@ -486,10 +505,10 @@ export default async function ComparePage({ params }: Props) {
 
         <section className="border-t border-neutral-200/70 py-8">
           <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
-            どちらを先に取るべきか
+            取得順・学習順の考え方
           </h2>
           <div className="rounded-lg border border-neutral-200/70 p-5">
-            <div className="text-[11px] text-neutral-500">おすすめ順</div>
+            <div className="text-[11px] text-neutral-500">学習順の目安</div>
             <div className="mt-1 text-base font-semibold text-neutral-950">
               {recommendedOrderLabel(comparison.recommended_order, left, right)}
             </div>
