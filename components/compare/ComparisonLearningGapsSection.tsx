@@ -58,6 +58,12 @@ function getReusableLabels(items: ComparisonLearningGap[]) {
     .slice(0, 4)
 }
 
+function sortByDisplayOrder(items: ComparisonLearningGap[]) {
+  return [...items].sort(
+    (a, b) => (a.display_order ?? 9999) - (b.display_order ?? 9999)
+  )
+}
+
 function DirectionBlock({
   title,
   items,
@@ -67,9 +73,10 @@ function DirectionBlock({
 }) {
   if (items.length === 0) return null
 
-  const totalHours = sumHours(items)
-  const mainGaps = getMainGapLabels(items)
-  const reusable = getReusableLabels(items)
+  const sortedItems = sortByDisplayOrder(items)
+  const totalHours = sumHours(sortedItems)
+  const mainGaps = getMainGapLabels(sortedItems)
+  const reusable = getReusableLabels(sortedItems)
 
   return (
     <div className="rounded-xl border border-neutral-200/70 bg-white p-5">
@@ -105,9 +112,9 @@ function DirectionBlock({
       </div>
 
       <div className="mt-4 space-y-3">
-        {items.map((item) => (
+        {sortedItems.map((item) => (
           <div
-            key={`${item.direction}-${item.gap_label}`}
+            key={`${item.from_qualification_slug}-${item.to_qualification_slug}-${item.gap_label}`}
             className="rounded-lg bg-neutral-50 p-4 ring-1 ring-neutral-200/70"
           >
             <div className="flex flex-wrap items-start justify-between gap-3">
@@ -115,6 +122,7 @@ function DirectionBlock({
                 <div className="text-sm font-semibold text-neutral-950">
                   {item.gap_label}
                 </div>
+
                 {item.gap_category && (
                   <div className="mt-1 text-xs text-neutral-500">
                     {item.gap_category}
@@ -126,9 +134,11 @@ function DirectionBlock({
                 <span className="rounded-full bg-white px-2 py-1 text-neutral-600 ring-1 ring-neutral-200/70">
                   流用：{reuseLabel(item.reuse_level)}
                 </span>
+
                 <span className="rounded-full bg-white px-2 py-1 text-neutral-600 ring-1 ring-neutral-200/70">
                   負担：{levelLabel(item.gap_level)}
                 </span>
+
                 <span className="rounded-full bg-white px-2 py-1 text-neutral-600 ring-1 ring-neutral-200/70">
                   目安：
                   {formatHoursRange(
@@ -156,8 +166,22 @@ export default function ComparisonLearningGapsSection({
 }: Props) {
   if (items.length === 0) return null
 
-  const leftToRight = items.filter((item) => item.direction === "left_to_right")
-  const rightToLeft = items.filter((item) => item.direction === "right_to_left")
+  const leftToRight = items.filter(
+    (item) =>
+      item.from_qualification_slug === left.slug &&
+      item.to_qualification_slug === right.slug
+  )
+
+  const rightToLeft = items.filter(
+    (item) =>
+      item.from_qualification_slug === right.slug &&
+      item.to_qualification_slug === left.slug
+  )
+
+  const hasLeftToRight = leftToRight.length > 0
+  const hasRightToLeft = rightToLeft.length > 0
+
+  if (!hasLeftToRight && !hasRightToLeft) return null
 
   return (
     <section className="border-t border-neutral-200/70 py-8">

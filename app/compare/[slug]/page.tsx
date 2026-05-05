@@ -440,6 +440,21 @@ export default async function ComparePage({ params }: Props) {
 
         <section className="border-t border-neutral-200/70 py-8">
           <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
+            取得順・学習順の考え方
+          </h2>
+          <div className="rounded-lg border border-neutral-200/70 p-5">
+            <div className="text-[11px] text-neutral-500">学習順の目安</div>
+            <div className="mt-1 text-base font-semibold text-neutral-950">
+              {recommendedOrderLabel(comparison.recommended_order, left, right)}
+            </div>
+            <p className="mt-4 text-sm leading-8 text-neutral-700">
+              {comparison.decision_summary}
+            </p>
+          </div>
+        </section>
+
+        <section className="border-t border-neutral-200/70 py-8">
+          <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
             知識範囲はどれくらい被るか
           </h2>
           <div className="rounded-lg border border-neutral-200/70 p-5">
@@ -453,70 +468,17 @@ export default async function ComparePage({ params }: Props) {
           </div>
         </section>
 
-        <ComparisonQuestionPairsSection
-          items={questionPairs}
-          left={left}
-          right={right}
-        />
-
         <ComparisonLearningGapsSection
           items={learningGaps}
           left={left}
           right={right}
         />
 
-        <section className="border-t border-neutral-200/70 py-8">
-          <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
-            すでに片方を持っている場合の追加学習時間
-          </h2>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-lg border border-neutral-200/70 p-5">
-              <h3 className="text-base font-semibold text-neutral-950">
-                {left.name_short}取得者が{right.name_short}を目指す場合
-              </h3>
-              <div className="mt-3 text-2xl font-semibold text-neutral-950">
-                {additionalHoursLabel(
-                  comparison.left_to_right_hours_min,
-                  comparison.left_to_right_hours_max
-                )}
-              </div>
-              <p className="mt-4 text-sm leading-8 text-neutral-700">
-                {comparison.left_to_right_summary}
-              </p>
-            </div>
-
-            <div className="rounded-lg border border-neutral-200/70 p-5">
-              <h3 className="text-base font-semibold text-neutral-950">
-                {right.name_short}取得者が{left.name_short}を目指す場合
-              </h3>
-              <div className="mt-3 text-2xl font-semibold text-neutral-950">
-                {additionalHoursLabel(
-                  comparison.right_to_left_hours_min,
-                  comparison.right_to_left_hours_max
-                )}
-              </div>
-              <p className="mt-4 text-sm leading-8 text-neutral-700">
-                {comparison.right_to_left_summary}
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section className="border-t border-neutral-200/70 py-8">
-          <h2 className="mb-5 text-lg font-semibold tracking-tight text-neutral-950">
-            取得順・学習順の考え方
-          </h2>
-          <div className="rounded-lg border border-neutral-200/70 p-5">
-            <div className="text-[11px] text-neutral-500">学習順の目安</div>
-            <div className="mt-1 text-base font-semibold text-neutral-950">
-              {recommendedOrderLabel(comparison.recommended_order, left, right)}
-            </div>
-            <p className="mt-4 text-sm leading-8 text-neutral-700">
-              {comparison.decision_summary}
-            </p>
-          </div>
-        </section>
+        <ComparisonQuestionPairsSection
+          items={questionPairs}
+          left={left}
+          right={right}
+        />
 
         {faqs.length > 0 && (
           <section className="border-t border-neutral-200/70 py-8">
